@@ -5,8 +5,24 @@ function getMemberIdFromPath() {
   return parts[parts.length - 1] || "";
 }
 
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name) || "";
+}
+
+async function registerFromPhone(phone, name) {
+  const response = await fetch("/api/loyalty/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, name: name || "Member" })
+  });
+  if (!response.ok) throw new Error("Card not found.");
+  return response.json();
+}
+
 async function loadCard() {
   const id = getMemberIdFromPath();
+  const queryPhone = getQueryParam("phone");
+  const queryName = getQueryParam("name");
   const pointsCurrent = document.getElementById("pointsCurrent");
   const pointsGoal = document.getElementById("pointsGoal");
   const ruleLine = document.getElementById("ruleLine");
@@ -17,16 +33,27 @@ async function loadCard() {
   const cardStatus = document.getElementById("cardStatus");
   const appleWalletBtn = document.getElementById("appleWalletBtn");
 
-  if (!id) {
+  if (!id && !queryPhone) {
     cardStatus.textContent = "Invalid card link.";
     return;
   }
 
   try {
-    const response = await fetch(`/api/loyalty/member/${encodeURIComponent(id)}`);
-    if (!response.ok) throw new Error("Card not found.");
+    let data = null;
 
-    const data = await response.json();
+    if (id) {
+      const response = await fetch(`/api/loyalty/member/${encodeURIComponent(id)}`);
+      if (response.ok) {
+        data = await response.json();
+      }
+    }
+
+    // Vercel serverless can lose transient records; recover via phone if provided.
+    if (!data && queryPhone) {
+      data = await registerFromPhone(queryPhone, queryName);
+    }
+
+    if (!data) throw new Error("Card not found.");
     const goal = Number(data.pointsGoal) > 0 ? Number(data.pointsGoal) : 10;
 
     pointsCurrent.textContent = String(data.points ?? 0);

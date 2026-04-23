@@ -342,6 +342,12 @@ function loyaltyMetaPayload() {
   };
 }
 
+function buildLoyaltyCardUrl(baseUrl, member) {
+  const phone = encodeURIComponent(member.phone || "");
+  const name = encodeURIComponent(member.name || "");
+  return `${baseUrl}/loyalty/card/${member.id}?phone=${phone}&name=${name}`;
+}
+
 function getLoyaltyMemberById(memberId) {
   if (USE_VOLATILE_LOYALTY_STORE) {
     return Promise.resolve(loyaltyMembersById.get(memberId) || null);
@@ -559,7 +565,7 @@ app.post("/api/loyalty/register", async (req, res) => {
 
     const existing = await getLoyaltyMemberByPhone(normalized);
     if (existing) {
-      const cardUrl = `${baseUrl}/loyalty/card/${existing.id}`;
+      const cardUrl = buildLoyaltyCardUrl(baseUrl, existing);
       const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
       return res.json({
         id: existing.id,
@@ -586,7 +592,7 @@ app.post("/api/loyalty/register", async (req, res) => {
       createdAt
     );
 
-    const cardUrl = `${baseUrl}/loyalty/card/${id}`;
+    const cardUrl = buildLoyaltyCardUrl(baseUrl, created);
     const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
 
     res.status(201).json({
@@ -617,7 +623,7 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
       return res.status(404).json({ error: "Member not found." });
     }
     const baseUrl = resolveBaseUrl(req);
-    const cardUrl = `${baseUrl}/loyalty/card/${row.id}`;
+    const cardUrl = buildLoyaltyCardUrl(baseUrl, row);
     const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 280, margin: 2 });
     res.json({
       id: row.id,

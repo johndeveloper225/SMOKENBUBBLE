@@ -12,7 +12,15 @@ function extractLoyaltyMemberId(decodedText) {
   try {
     const url = new URL(decodedText);
     const match = url.pathname.match(/\/loyalty\/card\/([^/]+)/);
-    return match ? match[1] : null;
+    if (match) return { memberId: match[1], phone: "", name: "" };
+    if (url.pathname.includes("/loyalty/card")) {
+      return {
+        memberId: "",
+        phone: url.searchParams.get("phone") || "",
+        name: url.searchParams.get("name") || "Member"
+      };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -34,8 +42,26 @@ async function checkIn(memberId) {
   return data;
 }
 
-async function processMemberId(memberId) {
+async function ensureMemberByPhone(phone, name) {
+  const response = await fetch("/api/loyalty/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, name: name || "Member" })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Could not resolve member.");
+  return data;
+}
+
+async function processMember(member) {
   try {
+    let memberId = member.memberId;
+    if (!memberId && member.phone) {
+      const resolved = await ensureMemberByPhone(member.phone, member.name);
+      memberId = resolved.id;
+    }
+    if (!memberId) throw new Error("Could not resolve member from QR.");
+
     scanStatus.textContent = "Checking in…";
     const data = await checkIn(memberId);
     rName.textContent = data.name;
@@ -78,14 +104,14 @@ async function startScanner() {
       { fps: 10, qrbox: { width: 220, height: 220 } },
       async (decodedText) => {
         if (handled) return;
-        const memberId = extractLoyaltyMemberId(decodedText);
-        if (!memberId) {
+        const member = extractLoyaltyMemberId(decodedText);
+        if (!member) {
           scanStatus.textContent =
             "Not a loyalty card URL. Scan the member’s card QR.";
           return;
         }
         handled = true;
-        await processMemberId(memberId);
+        await processMember(member);
       },
       () => {}
     );
