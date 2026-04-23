@@ -14,6 +14,18 @@ function getBaseUrl() {
   return process.env.BASE_URL || `http://localhost:${CURRENT_PORT}`;
 }
 
+function resolveBaseUrl(req) {
+  if (process.env.BASE_URL) {
+    return process.env.BASE_URL.replace(/\/$/, "");
+  }
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim();
+  const protocol = forwardedProto || req.protocol || "http";
+  const host = req.headers["x-forwarded-host"] || req.get("host");
+  return `${protocol}://${host}`;
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -120,8 +132,7 @@ function makePngFromBase64(base64) {
 const iconPngBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAYAAACoYAD2AAAAKUlEQVR4nO3NAQ0AAAgDIN8/9K3hHFQgCjJpaoFAIBAIBAKBQCAQCAT+QwE+3QHf7N8h8QAAAABJRU5ErkJggg==";
 
-async function buildPkPass(user) {
-  const baseUrl = getBaseUrl();
+async function buildPkPass(user, baseUrl) {
   const pass = await PKPass.from(
     {
       model: {
@@ -180,8 +191,7 @@ async function buildPkPass(user) {
   return pass.getAsBuffer();
 }
 
-async function buildLoyaltyPkPass(member) {
-  const baseUrl = getBaseUrl();
+async function buildLoyaltyPkPass(member, baseUrl) {
   const cardUrl = `${baseUrl}/loyalty/card/${member.id}`;
   const orgName =
     process.env.APPLE_ORGANIZATION_NAME || "Smoke n Bubbles";
@@ -282,7 +292,8 @@ app.post("/api/users", async (req, res) => {
 
     const id = generateUniqueId();
     const createdAt = new Date().toISOString();
-    const passUrl = `${getBaseUrl()}/pass/${id}`;
+    const baseUrl = resolveBaseUrl(req);
+    const passUrl = `${baseUrl}/pass/${id}`;
 
     db.run(
       "INSERT INTO users (id, name, memberId, createdAt) VALUES (?, ?, ?, ?)",
@@ -303,7 +314,7 @@ app.post("/api/users", async (req, res) => {
           memberId: memberId.trim(),
           passUrl,
           qrDataUrl,
-          appleWalletUrl: `${getBaseUrl()}/api/passkit/${id}`
+          appleWalletUrl: `${baseUrl}/api/passkit/${id}`
         });
       }
     );
@@ -324,7 +335,8 @@ app.get("/api/users/:id", async (req, res) => {
       return res.status(404).json({ error: "Pass not found." });
     }
 
-    const passUrl = `${getBaseUrl()}/pass/${row.id}`;
+    const baseUrl = resolveBaseUrl(req);
+    const passUrl = `${baseUrl}/pass/${row.id}`;
     const qrDataUrl = await QRCode.toDataURL(passUrl, { width: 280, margin: 2 });
 
     res.json({
@@ -334,7 +346,7 @@ app.get("/api/users/:id", async (req, res) => {
       createdAt: row.createdAt,
       passUrl,
       qrDataUrl,
-      appleWalletUrl: `${getBaseUrl()}/api/passkit/${row.id}`
+      appleWalletUrl: `${baseUrl}/api/passkit/${row.id}`
     });
   });
 });
@@ -359,7 +371,8 @@ app.get("/api/passkit/:id", async (req, res) => {
     }
 
     try {
-      const passBuffer = await buildPkPass(user);
+      const baseUrl = resolveBaseUrl(req);
+      const passBuffer = await buildPkPass(user, baseUrl);
       res.setHeader("Content-Type", "application/vnd.apple.pkpass");
       res.setHeader(
         "Content-Disposition",
@@ -388,7 +401,7 @@ app.post("/api/loyalty/register", async (req, res) => {
       });
     }
 
-    const baseUrl = getBaseUrl();
+    const baseUrl = resolveBaseUrl(req);
 
     db.get(
       "SELECT * FROM loyalty_members WHERE phone = ?",
@@ -469,7 +482,7 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
       return res.status(404).json({ error: "Member not found." });
     }
 
-    const baseUrl = getBaseUrl();
+    const baseUrl = resolveBaseUrl(req);
     const cardUrl = `${baseUrl}/loyalty/card/${row.id}`;
     const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 280, margin: 2 });
 
@@ -510,7 +523,8 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
       }
 
       try {
-        const passBuffer = await buildLoyaltyPkPass(member);
+        const baseUrl = resolveBaseUrl(req);
+        const passBuffer = await buildLoyaltyPkPass(member, baseUrl);
         res.setHeader("Content-Type", "application/vnd.apple.pkpass");
         res.setHeader(
           "Content-Disposition",
@@ -603,7 +617,7 @@ app.get("/api/loyalty/wallet-preview/:id", (req, res) => {
       return res.status(404).json({ error: "Member not found." });
     }
 
-    const baseUrl = getBaseUrl();
+    const baseUrl = resolveBaseUrl(req);
     res.json({
       integration: "apple-wallet-pass",
       status: "preview_only",
