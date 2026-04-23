@@ -348,6 +348,12 @@ function buildLoyaltyCardUrl(baseUrl, member) {
   return `${baseUrl}/loyalty/card/${member.id}?phone=${phone}&name=${name}`;
 }
 
+function buildLoyaltyPasskitUrl(baseUrl, member) {
+  const phone = encodeURIComponent(member.phone || "");
+  const name = encodeURIComponent(member.name || "");
+  return `${baseUrl}/api/passkit/loyalty/${member.id}?phone=${phone}&name=${name}`;
+}
+
 function getLoyaltyMemberById(memberId) {
   if (USE_VOLATILE_LOYALTY_STORE) {
     return Promise.resolve(loyaltyMembersById.get(memberId) || null);
@@ -577,7 +583,7 @@ app.post("/api/loyalty/register", async (req, res) => {
         cardUrl,
         qrDataUrl,
         returning: true,
-        appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${existing.id}`,
+        appleWalletLoyaltyUrl: buildLoyaltyPasskitUrl(baseUrl, existing),
         appleWalletEnabled: isAppleWalletConfigured(),
         ...loyaltyMetaPayload()
       });
@@ -605,7 +611,7 @@ app.post("/api/loyalty/register", async (req, res) => {
       cardUrl,
       qrDataUrl,
       returning: false,
-      appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${id}`,
+      appleWalletLoyaltyUrl: buildLoyaltyPasskitUrl(baseUrl, created),
       appleWalletEnabled: isAppleWalletConfigured(),
       ...loyaltyMetaPayload()
     });
@@ -634,7 +640,7 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
       lastCheckinDate: row.last_checkin_date,
       cardUrl,
       qrDataUrl,
-      appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${row.id}`,
+      appleWalletLoyaltyUrl: buildLoyaltyPasskitUrl(baseUrl, row),
       appleWalletEnabled: isAppleWalletConfigured(),
       ...loyaltyMetaPayload()
     });
@@ -652,9 +658,26 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
   }
 
   const { id } = req.params;
+  const queryPhone = normalizePhone(req.query.phone);
+  const queryName = String(req.query.name || "Member").trim() || "Member";
 
   try {
-    const member = await getLoyaltyMemberById(id);
+    let member = await getLoyaltyMemberById(id);
+
+    // In serverless mode, volatile stores can lose member records.
+    // If QR carries phone fallback info, recover or recreate member.
+    if (!member && queryPhone.length >= 10) {
+      member = await getLoyaltyMemberByPhone(queryPhone);
+      if (!member) {
+        member = await createLoyaltyMember(
+          id,
+          queryPhone,
+          queryName,
+          new Date().toISOString()
+        );
+      }
+    }
+
     if (!member) {
       return res.status(404).json({ error: "Loyalty member not found." });
     }
