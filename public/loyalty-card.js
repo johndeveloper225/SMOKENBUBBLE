@@ -39,9 +39,11 @@ async function loadCard() {
     cardQr.src = data.qrDataUrl;
     cardStatus.textContent = "";
 
-    if (data.appleWalletLoyaltyUrl) {
+    if (data.appleWalletLoyaltyUrl && data.appleWalletEnabled) {
       appleWalletBtn.href = data.appleWalletLoyaltyUrl;
       appleWalletBtn.classList.remove("hidden");
+    } else {
+      appleWalletBtn.classList.add("hidden");
     }
   } catch (e) {
     pointsCurrent.textContent = "—";

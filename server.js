@@ -44,6 +44,27 @@ const APPLE_WALLET_CONFIG = {
   signerKeyPassphrase: process.env.APPLE_SIGNER_KEY_PASSPHRASE || ""
 };
 
+function hasInlineAppleCerts() {
+  return Boolean(
+    process.env.APPLE_WWDR_PEM ||
+      process.env.APPLE_WWDR_BASE64 ||
+      process.env.APPLE_SIGNER_CERT_PEM ||
+      process.env.APPLE_SIGNER_CERT_BASE64 ||
+      process.env.APPLE_SIGNER_KEY_PEM ||
+      process.env.APPLE_SIGNER_KEY_BASE64
+  );
+}
+
+function readPemOrBase64(pemValue, b64Value) {
+  if (pemValue && pemValue.trim()) {
+    return Buffer.from(pemValue, "utf8");
+  }
+  if (b64Value && b64Value.trim()) {
+    return Buffer.from(b64Value, "base64");
+  }
+  return null;
+}
+
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -107,20 +128,56 @@ const LOYALTY_REWARD_TEXT =
   `Get £5 off when you reach ${LOYALTY_POINTS_GOAL} points`;
 
 function isAppleWalletConfigured() {
+  const hasFilePaths = Boolean(
+    APPLE_WALLET_CONFIG.wwdrPath &&
+      APPLE_WALLET_CONFIG.signerCertPath &&
+      APPLE_WALLET_CONFIG.signerKeyPath
+  );
   return Boolean(
     APPLE_WALLET_CONFIG.passTypeIdentifier &&
       APPLE_WALLET_CONFIG.teamIdentifier &&
-      APPLE_WALLET_CONFIG.wwdrPath &&
-      APPLE_WALLET_CONFIG.signerCertPath &&
-      APPLE_WALLET_CONFIG.signerKeyPath
+      (hasFilePaths || hasInlineAppleCerts())
   );
 }
 
 function getCertificates() {
+  const wwdrInline = readPemOrBase64(
+    process.env.APPLE_WWDR_PEM,
+    process.env.APPLE_WWDR_BASE64
+  );
+  const signerCertInline = readPemOrBase64(
+    process.env.APPLE_SIGNER_CERT_PEM,
+    process.env.APPLE_SIGNER_CERT_BASE64
+  );
+  const signerKeyInline = readPemOrBase64(
+    process.env.APPLE_SIGNER_KEY_PEM,
+    process.env.APPLE_SIGNER_KEY_BASE64
+  );
+
+  const wwdr =
+    wwdrInline ||
+    (APPLE_WALLET_CONFIG.wwdrPath
+      ? fs.readFileSync(APPLE_WALLET_CONFIG.wwdrPath)
+      : null);
+  const signerCert =
+    signerCertInline ||
+    (APPLE_WALLET_CONFIG.signerCertPath
+      ? fs.readFileSync(APPLE_WALLET_CONFIG.signerCertPath)
+      : null);
+  const signerKey =
+    signerKeyInline ||
+    (APPLE_WALLET_CONFIG.signerKeyPath
+      ? fs.readFileSync(APPLE_WALLET_CONFIG.signerKeyPath)
+      : null);
+
+  if (!wwdr || !signerCert || !signerKey) {
+    throw new Error("Apple Wallet certificates are incomplete.");
+  }
+
   return {
-    wwdr: fs.readFileSync(APPLE_WALLET_CONFIG.wwdrPath),
-    signerCert: fs.readFileSync(APPLE_WALLET_CONFIG.signerCertPath),
-    signerKey: fs.readFileSync(APPLE_WALLET_CONFIG.signerKeyPath),
+    wwdr,
+    signerCert,
+    signerKey,
     signerKeyPassphrase: APPLE_WALLET_CONFIG.signerKeyPassphrase
   };
 }
@@ -428,6 +485,7 @@ app.post("/api/loyalty/register", async (req, res) => {
             qrDataUrl,
             returning: true,
             appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${row.id}`,
+            appleWalletEnabled: isAppleWalletConfigured(),
             ...loyaltyMetaPayload()
           });
         }
@@ -460,6 +518,7 @@ app.post("/api/loyalty/register", async (req, res) => {
               qrDataUrl,
               returning: false,
               appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${id}`,
+              appleWalletEnabled: isAppleWalletConfigured(),
               ...loyaltyMetaPayload()
             });
           }
@@ -496,6 +555,7 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
       cardUrl,
       qrDataUrl,
       appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${row.id}`,
+      appleWalletEnabled: isAppleWalletConfigured(),
       ...loyaltyMetaPayload()
     });
   });
@@ -505,7 +565,7 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
   if (!isAppleWalletConfigured()) {
     return res.status(503).json({
       error:
-        "Apple Wallet is not configured. Set APPLE_PASS_TYPE_IDENTIFIER, APPLE_TEAM_IDENTIFIER, APPLE_WWDR_PATH, APPLE_SIGNER_CERT_PATH, and APPLE_SIGNER_KEY_PATH."
+        "Apple Wallet is not configured. Set APPLE_PASS_TYPE_IDENTIFIER and APPLE_TEAM_IDENTIFIER plus certs via file paths (APPLE_WWDR_PATH / APPLE_SIGNER_CERT_PATH / APPLE_SIGNER_KEY_PATH) or inline envs (APPLE_WWDR_PEM|BASE64, APPLE_SIGNER_CERT_PEM|BASE64, APPLE_SIGNER_KEY_PEM|BASE64)."
     });
   }
 
