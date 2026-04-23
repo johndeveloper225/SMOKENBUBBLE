@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local database/runtime artifacts
+*.db
+*.sqlite
+*.log
+
+# Apple certificates and keys
+certs/
+*.cer
+*.csr
+*.key
+
+# OS/editor artifacts
+.DS_Store
+Thumbs.db

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>Scan Pass QR</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="top">
+        <h1>Scan Pass QR</h1>
+        <p>Point your camera at a pass QR code</p>
+      </header>
+
+      <section class="card">
+        <div id="reader"></div>
+        <p id="scanStatus" class="status-message">Camera not started.</p>
+        <button id="startScanBtn">Start Scanner</button>
+      </section>
+
+      <section id="scanResult" class="card hidden">
+        <h2>Scanned User Info</h2>
+        <p><strong>Name:</strong> <span id="scanName"></span></p>
+        <p><strong>Member ID:</strong> <span id="scanMemberId"></span></p>
+        <p><strong>Pass Link:</strong> <a id="scanLink" href="#"></a></p>
+      </section>
+
+      <a href="/" class="btn-link">Back to Home</a>
+    </main>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="/scanner.js"></script>
+  </body>
+</html>

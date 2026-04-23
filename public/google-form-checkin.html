@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Check-in</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f8fafc;
+        --card: #fff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --ok: #15803d;
+        --warn: #b45309;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      main {
+        background: var(--card);
+        max-width: 420px;
+        width: 100%;
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0 0 12px;
+      }
+      p {
+        margin: 8px 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .status {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 16px;
+      }
+      .status.ok {
+        color: var(--ok);
+      }
+      .status.warn {
+        color: var(--warn);
+      }
+      .status.err {
+        color: #b91c1c;
+      }
+      code {
+        font-size: 0.8rem;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Check-in</h1>
+      <p id="detail">Processing…</p>
+      <p id="status" class="status" aria-live="polite"></p>
+    </main>
+
+    <iframe name="gf_submit_frame" id="gf_submit_frame" title="Submit" style="display: none; width: 0; height: 0; border: 0"></iframe>
+
+    <script>
+      /**
+       * CONFIG — replace with your Google Form values.
+       *
+       * 1. Open your form → Send → link icon → shorten URL optional.
+       * 2. Form response URL looks like:
+       *    https://docs.google.com/forms/d/e/FORM_ID_HERE/formResponse
+       * 3. Get entry IDs: add a pre-filled link (⋮ menu → Get pre-filled link)
+       *    and copy query params: entry.123456789=...
+       */
+      const GOOGLE_FORM_ACTION =
+        "https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/formResponse";
+      /** Google Form field for phone (from pre-filled link) */
+      const ENTRY_PHONE = "entry.YOUR_PHONE_FIELD_ID";
+      /** Optional: Google Form field for points. Leave "" if your form has no points question. */
+      const ENTRY_POINTS = "";
+
+      const STORAGE_PREFIX = "gf_checkin_day_";
+
+      function normalizePhone(raw) {
+        const d = String(raw || "").replace(/\D/g, "");
+        if (d.length === 11 && d.startsWith("1")) return d.slice(1);
+        return d;
+      }
+
+      function todayKey() {
+        return new Date().toLocaleDateString("en-CA");
+      }
+
+      function storageKey(phoneDigits) {
+        return STORAGE_PREFIX + todayKey() + "_" + phoneDigits;
+      }
+
+      function show(line, cls) {
+        document.getElementById("status").textContent = line;
+        document.getElementById("status").className = "status " + (cls || "");
+      }
+
+      function submitToGoogleForm(phoneDigits, pointsValue) {
+        return new Promise((resolve, reject) => {
+          const iframe = document.getElementById("gf_submit_frame");
+          let settled = false;
+
+          const done = () => {
+            if (settled) return;
+            settled = true;
+            resolve();
+          };
+
+          const fail = () => {
+            if (settled) return;
+            settled = true;
+            reject(new Error("Submit timeout"));
+          };
+
+          iframe.onload = () => done();
+          iframe.onerror = () => fail();
+
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = GOOGLE_FORM_ACTION;
+          form.target = "gf_submit_frame";
+          form.acceptCharset = "UTF-8";
+          form.style.display = "none";
+
+          const p = document.createElement("input");
+          p.type = "hidden";
+          p.name = ENTRY_PHONE;
+          p.value = phoneDigits;
+          form.appendChild(p);
+
+          if (ENTRY_POINTS && ENTRY_POINTS.startsWith("entry.")) {
+            const pt = document.createElement("input");
+            pt.type = "hidden";
+            pt.name = ENTRY_POINTS;
+            pt.value = String(pointsValue);
+            form.appendChild(pt);
+          }
+
+          document.body.appendChild(form);
+          form.submit();
+          form.remove();
+
+          window.setTimeout(() => {
+            if (!settled) done();
+          }, 2500);
+        });
+      }
+
+      (async function run() {
+        const params = new URLSearchParams(window.location.search);
+        const phoneRaw = params.get("phone");
+
+        const detail = document.getElementById("detail");
+        if (phoneRaw != null && String(phoneRaw).trim()) {
+          detail.textContent = "Phone from URL: " + String(phoneRaw);
+        } else {
+          detail.textContent = "No ?phone= in the URL.";
+        }
+
+        if (!phoneRaw || !String(phoneRaw).trim()) {
+          show("Missing phone. Use ?phone=5551234567", "err");
+          return;
+        }
+
+        if (
+          GOOGLE_FORM_ACTION.includes("YOUR_FORM_ID") ||
+          ENTRY_PHONE.includes("YOUR_PHONE_FIELD")
+        ) {
+          show("Configure GOOGLE_FORM_ACTION and ENTRY_PHONE in this file.", "err");
+          return;
+        }
+
+        const digits = normalizePhone(phoneRaw);
+        if (digits.length < 10) {
+          show("Invalid phone number (need at least 10 digits).", "err");
+          return;
+        }
+
+        const key = storageKey(digits);
+        if (localStorage.getItem(key) === "1") {
+          show("Already checked in today.", "warn");
+          return;
+        }
+
+        try {
+          await submitToGoogleForm(digits, 1);
+          localStorage.setItem(key, "1");
+          show("Check-in successful", "ok");
+          document.getElementById("detail").textContent =
+            "Recorded for " + formatDisplay(digits) + " · +1 point";
+        } catch {
+          show("Could not confirm submission. Try again.", "err");
+        }
+      })();
+
+      function formatDisplay(d) {
+        if (d.length === 10)
+          return "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6);
+        return d;
+      }
+    </script>
+  </body>
+</html>

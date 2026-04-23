@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Check-in Scanner</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="top">
+        <h1>Check-in Scanner</h1>
+        <p>Scan a member’s loyalty QR. One check-in per member per day.</p>
+      </header>
+
+      <section class="card">
+        <div id="reader"></div>
+        <p id="scanStatus" class="status-message">Camera not started.</p>
+        <button type="button" id="startScanBtn">Start scanner</button>
+      </section>
+
+      <section id="checkinResult" class="card hidden">
+        <h2>Check-in result</h2>
+        <p><strong>Name:</strong> <span id="rName"></span></p>
+        <p><strong>Points:</strong> <span id="rPoints"></span></p>
+        <p id="rMessage" class="muted"></p>
+      </section>
+
+      <a href="/" class="btn-link secondary">Back</a>
+    </main>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="/checkin-scanner.js"></script>
+  </body>
+</html>

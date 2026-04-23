@@ -1,0 +1,9 @@
+{
+  "name": "Smoke n Bubbles Loyalty",
+  "short_name": "SnB Loyalty",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#0f172a",
+  "icons": []
+}

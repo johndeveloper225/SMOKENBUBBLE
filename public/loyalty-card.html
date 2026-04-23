@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <title>Smoke n Bubbles — Loyalty</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="snb-page">
+    <main class="snb-wrap">
+      <article class="snb-card" aria-label="Loyalty card">
+        <div class="snb-smoke" aria-hidden="true"></div>
+
+        <header class="snb-brand">
+          <div class="snb-logo-mark" aria-hidden="true">
+            <svg class="snb-smoke-icon" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M8 28c4-8 2-14-2-18M18 28c5-10 3-16-1-20M28 28c6-9 4-15 0-19M38 28c3-7 5-13 2-17"
+                stroke="rgba(255,255,255,0.85)"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <h1 class="snb-wordmark">
+            <span class="snb-teal">Smoke</span>
+            <span class="snb-white"> n </span>
+            <span class="snb-teal">Bubbles</span>
+          </h1>
+          <p class="snb-seal">VAPE <span class="snb-sep">|</span> BUBBLE TEA</p>
+        </header>
+
+        <div class="snb-rule" role="presentation"></div>
+
+        <section class="snb-loyalty">
+          <h2 class="snb-loyalty-title">Loyalty Rewards</h2>
+          <p id="ruleLine" class="snb-muted">Earn 1 point for every £3 spent</p>
+          <p class="snb-reward">
+            <span class="snb-star" aria-hidden="true">★</span>
+            <span id="rewardLine">Get £5 off when you reach 10 points</span>
+          </p>
+          <p class="snb-points-line" aria-live="polite">
+            Points: <span id="pointsCurrent">0</span> / <span id="pointsGoal">10</span>
+          </p>
+        </section>
+
+        <div class="snb-qr-wrap">
+          <img id="cardQr" class="snb-qr" alt="Loyalty QR code" />
+        </div>
+        <p class="snb-scan-hint">Scan at checkout</p>
+
+        <p id="cardName" class="snb-member-name"></p>
+        <p id="cardPhone" class="snb-member-phone"></p>
+      </article>
+
+      <p id="cardStatus" class="snb-status"></p>
+
+      <a id="appleWalletBtn" class="snb-wallet-btn hidden" href="#">Add to Apple Wallet</a>
+
+      <section class="snb-foot-card">
+        <h3 class="snb-foot-title">Save to Home Screen</h3>
+        <p class="snb-foot-text">
+          <strong>iPhone:</strong> Share → <em>Add to Home Screen</em>.
+        </p>
+        <p class="snb-foot-text">
+          <strong>Android:</strong> Menu → <em>Add to Home screen</em>.
+        </p>
+      </section>
+
+      <a href="/" class="snb-back">← Back</a>
+    </main>
+
+    <script src="/loyalty-card.js"></script>
+  </body>
+</html>

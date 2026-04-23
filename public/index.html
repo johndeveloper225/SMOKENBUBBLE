@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Smoke n Bubbles — Loyalty</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="top">
+        <h1>Smoke n Bubbles</h1>
+        <p>Loyalty rewards · VAPE <span style="color: var(--primary)">|</span> BUBBLE TEA</p>
+      </header>
+
+      <section class="card">
+        <h2>Join or open your card</h2>
+        <p class="muted small">
+          Enter the same phone number anytime to see your existing points and QR.
+        </p>
+        <form id="loyaltyForm" class="form">
+          <label>
+            Phone number
+            <input
+              type="tel"
+              id="phone"
+              inputmode="numeric"
+              autocomplete="tel"
+              placeholder="5551234567"
+              required
+            />
+          </label>
+          <label>
+            Name on card
+            <input type="text" id="name" placeholder="Alex Rivera" required />
+          </label>
+          <button type="submit">Get my loyalty card</button>
+        </form>
+
+        <div id="result" class="result hidden">
+          <h3>Your card</h3>
+          <p id="welcomeBack" class="muted small hidden"></p>
+          <div class="points-inline">
+            <span class="muted">Points</span>
+            <strong id="resultPoints">0</strong>
+          </div>
+          <img id="qrImage" alt="Loyalty QR code" />
+          <p>
+            <a id="openCard" class="btn-link" href="#">Open full card</a>
+          </p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Staff: check-in scanner</h2>
+        <p class="muted small">
+          Scan a member’s loyalty QR once per visit. Members can only earn
+          <strong>one check-in per day</strong>.
+        </p>
+        <a class="btn-link" href="/checkin-scanner.html">Open check-in scanner</a>
+      </section>
+
+      <section class="card instructions">
+        <h2>Save to Home Screen</h2>
+        <p>
+          <strong>iPhone (Safari):</strong> tap <strong>Share</strong>, then
+          <em>Add to Home Screen</em>.
+        </p>
+        <p>
+          <strong>Android (Chrome):</strong> menu (⋮) →
+          <em>Add to Home screen</em> or <em>Install app</em>.
+        </p>
+      </section>
+
+      <section class="card muted small">
+        <h2 class="h-inline">Optional API</h2>
+        <p>
+          Future Apple Wallet pass: <code>GET /api/loyalty/wallet-preview/:id</code>
+          returns suggested pass fields and barcode payload.
+        </p>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
