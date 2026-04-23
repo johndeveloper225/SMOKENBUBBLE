@@ -17,7 +17,10 @@ function getBaseUrl() {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-const db = new sqlite3.Database(path.join(__dirname, "passes.db"));
+const dbPath = process.env.VERCEL
+  ? path.join("/tmp", "passes.db")
+  : path.join(__dirname, "passes.db");
+const db = new sqlite3.Database(dbPath);
 
 const APPLE_WALLET_CONFIG = {
   passTypeIdentifier: process.env.APPLE_PASS_TYPE_IDENTIFIER,
@@ -665,4 +668,8 @@ function startServer(port) {
   return server;
 }
 
-startServer(START_PORT);
+if (require.main === module) {
+  startServer(START_PORT);
+}
+
+module.exports = app;
