@@ -33,6 +33,9 @@ const dbPath = process.env.VERCEL
   ? path.join("/tmp", "passes.db")
   : path.join(__dirname, "passes.db");
 const db = new sqlite3.Database(dbPath);
+const USE_VOLATILE_LOYALTY_STORE = Boolean(process.env.VERCEL);
+const loyaltyMembersById = new Map();
+const loyaltyMemberIdByPhone = new Map();
 
 const APPLE_WALLET_CONFIG = {
   passTypeIdentifier: process.env.APPLE_PASS_TYPE_IDENTIFIER,
@@ -339,6 +342,100 @@ function loyaltyMetaPayload() {
   };
 }
 
+function getLoyaltyMemberById(memberId) {
+  if (USE_VOLATILE_LOYALTY_STORE) {
+    return Promise.resolve(loyaltyMembersById.get(memberId) || null);
+  }
+  return new Promise((resolve, reject) => {
+    db.get(
+      "SELECT * FROM loyalty_members WHERE id = ?",
+      [memberId],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row || null);
+      }
+    );
+  });
+}
+
+function getLoyaltyMemberByPhone(phone) {
+  if (USE_VOLATILE_LOYALTY_STORE) {
+    const memberId = loyaltyMemberIdByPhone.get(phone);
+    if (!memberId) return Promise.resolve(null);
+    return Promise.resolve(loyaltyMembersById.get(memberId) || null);
+  }
+  return new Promise((resolve, reject) => {
+    db.get(
+      "SELECT * FROM loyalty_members WHERE phone = ?",
+      [phone],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row || null);
+      }
+    );
+  });
+}
+
+function createLoyaltyMember(id, phone, name, createdAt) {
+  if (USE_VOLATILE_LOYALTY_STORE) {
+    const member = {
+      id,
+      phone,
+      name,
+      points: 0,
+      last_checkin_date: null,
+      createdAt
+    };
+    loyaltyMembersById.set(id, member);
+    loyaltyMemberIdByPhone.set(phone, id);
+    return Promise.resolve(member);
+  }
+  return new Promise((resolve, reject) => {
+    db.run(
+      "INSERT INTO loyalty_members (id, phone, name, points, last_checkin_date, createdAt) VALUES (?, ?, ?, 0, NULL, ?)",
+      [id, phone, name, createdAt],
+      (err) => {
+        if (err) return reject(err);
+        resolve({
+          id,
+          phone,
+          name,
+          points: 0,
+          last_checkin_date: null,
+          createdAt
+        });
+      }
+    );
+  });
+}
+
+function addDailyCheckinPoint(memberId, today) {
+  if (USE_VOLATILE_LOYALTY_STORE) {
+    const member = loyaltyMembersById.get(memberId);
+    if (!member) return Promise.resolve({ status: "not_found" });
+    if (member.last_checkin_date === today) {
+      return Promise.resolve({ status: "already_checked_in", member });
+    }
+    member.points += POINTS_PER_CHECKIN;
+    member.last_checkin_date = today;
+    loyaltyMembersById.set(memberId, member);
+    return Promise.resolve({ status: "ok", member });
+  }
+  return new Promise((resolve, reject) => {
+    db.run(
+      "UPDATE loyalty_members SET points = points + ?, last_checkin_date = ? WHERE id = ? AND (last_checkin_date IS NULL OR last_checkin_date != ?)",
+      [POINTS_PER_CHECKIN, today, memberId, today],
+      function (err) {
+        if (err) return reject(err);
+        if (this.changes === 0) {
+          return resolve({ status: "already_checked_in" });
+        }
+        resolve({ status: "ok" });
+      }
+    );
+  });
+}
+
 app.post("/api/users", async (req, res) => {
   try {
     const { name, memberId } = req.body;
@@ -460,71 +557,52 @@ app.post("/api/loyalty/register", async (req, res) => {
 
     const baseUrl = resolveBaseUrl(req);
 
-    db.get(
-      "SELECT * FROM loyalty_members WHERE phone = ?",
-      [normalized],
-      async (err, row) => {
-        if (err) {
-          return res.status(500).json({ error: "Database error." });
-        }
+    const existing = await getLoyaltyMemberByPhone(normalized);
+    if (existing) {
+      const cardUrl = `${baseUrl}/loyalty/card/${existing.id}`;
+      const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
+      return res.json({
+        id: existing.id,
+        phone: existing.phone,
+        phoneDisplay: formatPhoneDisplay(existing.phone),
+        name: existing.name,
+        points: existing.points,
+        lastCheckinDate: existing.last_checkin_date,
+        cardUrl,
+        qrDataUrl,
+        returning: true,
+        appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${existing.id}`,
+        appleWalletEnabled: isAppleWalletConfigured(),
+        ...loyaltyMetaPayload()
+      });
+    }
 
-        if (row) {
-          const cardUrl = `${baseUrl}/loyalty/card/${row.id}`;
-          const qrDataUrl = await QRCode.toDataURL(cardUrl, {
-            width: 320,
-            margin: 2
-          });
-          return res.json({
-            id: row.id,
-            phone: row.phone,
-            phoneDisplay: formatPhoneDisplay(row.phone),
-            name: row.name,
-            points: row.points,
-            lastCheckinDate: row.last_checkin_date,
-            cardUrl,
-            qrDataUrl,
-            returning: true,
-            appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${row.id}`,
-            appleWalletEnabled: isAppleWalletConfigured(),
-            ...loyaltyMetaPayload()
-          });
-        }
-
-        const id = generateLoyaltyId();
-        const createdAt = new Date().toISOString();
-
-        db.run(
-          "INSERT INTO loyalty_members (id, phone, name, points, last_checkin_date, createdAt) VALUES (?, ?, ?, 0, NULL, ?)",
-          [id, normalized, String(name).trim(), createdAt],
-          async (insertErr) => {
-            if (insertErr) {
-              return res.status(500).json({ error: "Could not register member." });
-            }
-
-            const cardUrl = `${baseUrl}/loyalty/card/${id}`;
-            const qrDataUrl = await QRCode.toDataURL(cardUrl, {
-              width: 320,
-              margin: 2
-            });
-
-            res.status(201).json({
-              id,
-              phone: normalized,
-              phoneDisplay: formatPhoneDisplay(normalized),
-              name: String(name).trim(),
-              points: 0,
-              lastCheckinDate: null,
-              cardUrl,
-              qrDataUrl,
-              returning: false,
-              appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${id}`,
-              appleWalletEnabled: isAppleWalletConfigured(),
-              ...loyaltyMetaPayload()
-            });
-          }
-        );
-      }
+    const id = generateLoyaltyId();
+    const createdAt = new Date().toISOString();
+    const created = await createLoyaltyMember(
+      id,
+      normalized,
+      String(name).trim(),
+      createdAt
     );
+
+    const cardUrl = `${baseUrl}/loyalty/card/${id}`;
+    const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
+
+    res.status(201).json({
+      id,
+      phone: created.phone,
+      phoneDisplay: formatPhoneDisplay(created.phone),
+      name: created.name,
+      points: created.points,
+      lastCheckinDate: created.last_checkin_date,
+      cardUrl,
+      qrDataUrl,
+      returning: false,
+      appleWalletLoyaltyUrl: `${baseUrl}/api/passkit/loyalty/${id}`,
+      appleWalletEnabled: isAppleWalletConfigured(),
+      ...loyaltyMetaPayload()
+    });
   } catch (_e) {
     res.status(500).json({ error: "Unexpected server error." });
   }
@@ -533,18 +611,14 @@ app.post("/api/loyalty/register", async (req, res) => {
 app.get("/api/loyalty/member/:id", async (req, res) => {
   const { id } = req.params;
 
-  db.get("SELECT * FROM loyalty_members WHERE id = ?", [id], async (err, row) => {
-    if (err) {
-      return res.status(500).json({ error: "Database error." });
-    }
+  try {
+    const row = await getLoyaltyMemberById(id);
     if (!row) {
       return res.status(404).json({ error: "Member not found." });
     }
-
     const baseUrl = resolveBaseUrl(req);
     const cardUrl = `${baseUrl}/loyalty/card/${row.id}`;
     const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 280, margin: 2 });
-
     res.json({
       id: row.id,
       phone: row.phone,
@@ -558,7 +632,9 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
       appleWalletEnabled: isAppleWalletConfigured(),
       ...loyaltyMetaPayload()
     });
-  });
+  } catch (_err) {
+    res.status(500).json({ error: "Database error." });
+  }
 });
 
 app.get("/api/passkit/loyalty/:id", async (req, res) => {
@@ -571,34 +647,25 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
 
   const { id } = req.params;
 
-  db.get(
-    "SELECT * FROM loyalty_members WHERE id = ?",
-    [id],
-    async (err, member) => {
-      if (err) {
-        return res.status(500).json({ error: "Database error." });
-      }
-      if (!member) {
-        return res.status(404).json({ error: "Loyalty member not found." });
-      }
-
-      try {
-        const baseUrl = resolveBaseUrl(req);
-        const passBuffer = await buildLoyaltyPkPass(member, baseUrl);
-        res.setHeader("Content-Type", "application/vnd.apple.pkpass");
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="smoke-n-bubbles-loyalty-${member.id}.pkpass"`
-        );
-        res.send(passBuffer);
-      } catch (_e) {
-        res.status(500).json({
-          error:
-            "Could not generate Apple Wallet pass. Check certificates and Pass Type ID."
-        });
-      }
+  try {
+    const member = await getLoyaltyMemberById(id);
+    if (!member) {
+      return res.status(404).json({ error: "Loyalty member not found." });
     }
-  );
+    const baseUrl = resolveBaseUrl(req);
+    const passBuffer = await buildLoyaltyPkPass(member, baseUrl);
+    res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="smoke-n-bubbles-loyalty-${member.id}.pkpass"`
+    );
+    res.send(passBuffer);
+  } catch (_e) {
+    res.status(500).json({
+      error:
+        "Could not generate Apple Wallet pass. Check certificates and Pass Type ID."
+    });
+  }
 });
 
 app.post("/api/loyalty/checkin", (req, res) => {
@@ -609,13 +676,9 @@ app.post("/api/loyalty/checkin", (req, res) => {
 
   const today = localCalendarDate();
 
-  db.get(
-    "SELECT * FROM loyalty_members WHERE id = ?",
-    [memberId],
-    (err, row) => {
-      if (err) {
-        return res.status(500).json({ error: "Database error." });
-      }
+  (async () => {
+    try {
+      const row = await getLoyaltyMemberById(memberId);
       if (!row) {
         return res.status(404).json({ error: "Member not found." });
       }
@@ -628,51 +691,41 @@ app.post("/api/loyalty/checkin", (req, res) => {
         });
       }
 
-      db.run(
-        "UPDATE loyalty_members SET points = points + ?, last_checkin_date = ? WHERE id = ? AND (last_checkin_date IS NULL OR last_checkin_date != ?)",
-        [POINTS_PER_CHECKIN, today, memberId, today],
-        function (updateErr) {
-          if (updateErr) {
-            return res.status(500).json({ error: "Could not update points." });
-          }
-          if (this.changes === 0) {
-            return res.status(409).json({
-              error: "Already checked in today.",
-              name: row.name,
-              points: row.points,
-              lastCheckinDate: row.last_checkin_date
-            });
-          }
+      const checkin = await addDailyCheckinPoint(memberId, today);
+      if (checkin.status === "already_checked_in") {
+        return res.status(409).json({
+          error: "Already checked in today.",
+          name: row.name,
+          points: row.points,
+          lastCheckinDate: row.last_checkin_date
+        });
+      }
+      if (checkin.status !== "ok") {
+        return res.status(500).json({ error: "Could not update points." });
+      }
 
-          db.get(
-            "SELECT * FROM loyalty_members WHERE id = ?",
-            [memberId],
-            (readErr, updated) => {
-              if (readErr || !updated) {
-                return res.status(500).json({ error: "Could not read member." });
-              }
-              res.json({
-                ok: true,
-                name: updated.name,
-                points: updated.points,
-                lastCheckinDate: updated.last_checkin_date,
-                message: `+${POINTS_PER_CHECKIN} point${POINTS_PER_CHECKIN === 1 ? "" : "s"}`
-              });
-            }
-          );
-        }
-      );
+      const updated = checkin.member || (await getLoyaltyMemberById(memberId));
+      if (!updated) {
+        return res.status(500).json({ error: "Could not read member." });
+      }
+      res.json({
+        ok: true,
+        name: updated.name,
+        points: updated.points,
+        lastCheckinDate: updated.last_checkin_date,
+        message: `+${POINTS_PER_CHECKIN} point${POINTS_PER_CHECKIN === 1 ? "" : "s"}`
+      });
+    } catch (_err) {
+      res.status(500).json({ error: "Database error." });
     }
-  );
+  })();
 });
 
-app.get("/api/loyalty/wallet-preview/:id", (req, res) => {
+app.get("/api/loyalty/wallet-preview/:id", async (req, res) => {
   const { id } = req.params;
 
-  db.get("SELECT * FROM loyalty_members WHERE id = ?", [id], (err, row) => {
-    if (err) {
-      return res.status(500).json({ error: "Database error." });
-    }
+  try {
+    const row = await getLoyaltyMemberById(id);
     if (!row) {
       return res.status(404).json({ error: "Member not found." });
     }
@@ -708,7 +761,9 @@ app.get("/api/loyalty/wallet-preview/:id", (req, res) => {
       ],
       appleWalletPkpassUrl: `${baseUrl}/api/passkit/loyalty/${row.id}`
     });
-  });
+  } catch (_err) {
+    res.status(500).json({ error: "Database error." });
+  }
 });
 
 app.get("/loyalty/card/:id", (_req, res) => {
