@@ -233,18 +233,18 @@ code {
 }
 
 .snb-wrap {
-  max-width: 400px;
+  max-width: 290px;
   margin: 0 auto;
-  padding: 20px 16px 32px;
+  padding: 10px 8px 22px;
 }
 
 .snb-card {
   position: relative;
   overflow: hidden;
-  border-radius: 22px;
+  border-radius: 0;
   background: var(--snb-black);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
-  padding: 22px 20px 20px;
+  padding: 14px 12px 14px;
   text-align: center;
 }
 
@@ -280,13 +280,13 @@ code {
 
 .snb-logo-banner {
   width: 100%;
-  max-width: 340px;
-  height: clamp(150px, 46vw, 220px);
-  margin: 0 auto 8px;
+  max-width: 265px;
+  height: clamp(215px, 66vw, 310px);
+  margin: 0 auto 4px;
   overflow: hidden;
   background: transparent;
   border: 0;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.38));
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.34));
   padding: 0;
 }
 
@@ -313,15 +313,15 @@ code {
 }
 
 .snb-seal {
-  margin: 10px auto 0;
+  margin: 2px auto 0;
   display: inline-block;
-  padding: 6px 14px;
-  border-radius: 999px;
+  padding: 4px 12px;
+  border-radius: 8px;
   background: #0a0a0a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.5rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
   color: #e5e5e5;
 }
 
@@ -332,7 +332,7 @@ code {
 
 .snb-rule {
   height: 2px;
-  margin: 18px 8px 14px;
+  margin: 10px 0 10px;
   border-radius: 2px;
   background: linear-gradient(
     90deg,
@@ -352,22 +352,22 @@ code {
 }
 
 .snb-loyalty-title {
-  margin: 0 0 8px;
-  font-size: 1.15rem;
+  margin: 0 0 4px;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #fff;
 }
 
 .snb-muted {
-  margin: 0 0 10px;
-  font-size: 0.82rem;
+  margin: 0 0 8px;
+  font-size: 0.76rem;
   color: #a3a3a3;
   line-height: 1.4;
 }
 
 .snb-reward {
-  margin: 0 0 14px;
-  font-size: 0.88rem;
+  margin: 0 0 9px;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--snb-teal);
   display: flex;
@@ -383,8 +383,8 @@ code {
 }
 
 .snb-points-line {
-  margin: 0 0 16px;
-  font-size: 1.05rem;
+  margin: 0 0 10px;
+  font-size: 1.9rem;
   font-weight: 600;
   color: #fafafa;
 }
@@ -394,11 +394,11 @@ code {
   z-index: 1;
   display: flex;
   justify-content: center;
-  padding: 8px;
+  padding: 6px;
   background: #fff;
-  border-radius: 14px;
+  border-radius: 9px;
   margin: 0 auto;
-  max-width: 220px;
+  max-width: 182px;
 }
 
 .snb-qr {
@@ -408,8 +408,8 @@ code {
 }
 
 .snb-scan-hint {
-  margin: 10px 0 6px;
-  font-size: 0.75rem;
+  margin: 8px 0 4px;
+  font-size: 0.7rem;
   color: #737373;
   position: relative;
   z-index: 1;
