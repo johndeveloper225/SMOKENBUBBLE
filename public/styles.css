@@ -270,6 +270,15 @@ code {
   margin-bottom: 6px;
 }
 
+.snb-logo-image {
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 10px;
+  filter: drop-shadow(0 4px 14px rgba(45, 212, 191, 0.16));
+}
+
 .snb-smoke-icon {
   width: 56px;
   height: 36px;
