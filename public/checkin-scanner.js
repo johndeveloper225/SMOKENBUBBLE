@@ -11,13 +11,15 @@ let handled = false;
 function extractLoyaltyMemberId(decodedText) {
   try {
     const url = new URL(decodedText);
+    const phone = url.searchParams.get("phone") || "";
+    const name = url.searchParams.get("name") || "Member";
     const match = url.pathname.match(/\/loyalty\/card\/([^/]+)/);
-    if (match) return { memberId: match[1], phone: "", name: "" };
+    if (match) return { memberId: match[1], phone, name };
     if (url.pathname.includes("/loyalty/card")) {
       return {
         memberId: "",
-        phone: url.searchParams.get("phone") || "",
-        name: url.searchParams.get("name") || "Member"
+        phone,
+        name
       };
     }
     return null;
@@ -26,11 +28,11 @@ function extractLoyaltyMemberId(decodedText) {
   }
 }
 
-async function checkIn(memberId) {
+async function checkIn(memberId, phone, name) {
   const response = await fetch("/api/loyalty/checkin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ memberId })
+    body: JSON.stringify({ memberId, phone, name })
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -63,7 +65,7 @@ async function processMember(member) {
     if (!memberId) throw new Error("Could not resolve member from QR.");
 
     scanStatus.textContent = "Checking in…";
-    const data = await checkIn(memberId);
+    const data = await checkIn(memberId, member.phone, member.name);
     rName.textContent = data.name;
     rPoints.textContent = String(data.points);
     rMessage.textContent = data.message || "";

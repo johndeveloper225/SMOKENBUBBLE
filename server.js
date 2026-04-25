@@ -699,16 +699,47 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
 });
 
 app.post("/api/loyalty/checkin", (req, res) => {
-  const { memberId } = req.body;
-  if (!memberId || typeof memberId !== "string") {
-    return res.status(400).json({ error: "memberId is required." });
+  const rawMemberId = req.body?.memberId;
+  const memberIdInput =
+    typeof rawMemberId === "string" && rawMemberId.trim()
+      ? rawMemberId.trim()
+      : "";
+  const normalizedPhone = normalizePhone(req.body?.phone || "");
+  const inputName =
+    String(req.body?.name || "Member").trim() || "Member";
+
+  if (!memberIdInput && normalizedPhone.length < 10) {
+    return res.status(400).json({
+      error: "memberId or a valid phone number is required."
+    });
   }
 
   const today = localCalendarDate();
 
   (async () => {
     try {
-      const row = await getLoyaltyMemberById(memberId);
+      let row = null;
+      let resolvedMemberId = memberIdInput;
+
+      if (resolvedMemberId) {
+        row = await getLoyaltyMemberById(resolvedMemberId);
+      }
+
+      // Recover member by phone if id is stale/missing (serverless cold starts).
+      if (!row && normalizedPhone.length >= 10) {
+        row = await getLoyaltyMemberByPhone(normalizedPhone);
+        if (!row) {
+          const newId = resolvedMemberId || generateLoyaltyId();
+          row = await createLoyaltyMember(
+            newId,
+            normalizedPhone,
+            inputName,
+            new Date().toISOString()
+          );
+        }
+        resolvedMemberId = row.id;
+      }
+
       if (!row) {
         return res.status(404).json({ error: "Member not found." });
       }
@@ -721,7 +752,7 @@ app.post("/api/loyalty/checkin", (req, res) => {
         });
       }
 
-      const checkin = await addDailyCheckinPoint(memberId, today);
+      const checkin = await addDailyCheckinPoint(resolvedMemberId, today);
       if (checkin.status === "already_checked_in") {
         return res.status(409).json({
           error: "Already checked in today.",
@@ -734,7 +765,8 @@ app.post("/api/loyalty/checkin", (req, res) => {
         return res.status(500).json({ error: "Could not update points." });
       }
 
-      const updated = checkin.member || (await getLoyaltyMemberById(memberId));
+      const updated =
+        checkin.member || (await getLoyaltyMemberById(resolvedMemberId));
       if (!updated) {
         return res.status(500).json({ error: "Could not read member." });
       }
