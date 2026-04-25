@@ -18,13 +18,21 @@ async function awardPoint(memberId, phone, name) {
 
   if (!resolvedId) return;
 
-  await fetch("/api/loyalty/checkin", {
+  const response = await fetch("/api/loyalty/checkin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ memberId: resolvedId })
   }).catch(() => {
     // Success page should still render even if check-in fails.
+    return null;
   });
+
+  if (response && response.ok) {
+    const data = await response.json().catch(() => null);
+    if (data && Number.isFinite(data.points) && phone) {
+      localStorage.setItem(`loyalty_points_${phone}`, String(data.points));
+    }
+  }
 }
 
 async function init() {

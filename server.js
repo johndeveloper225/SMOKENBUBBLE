@@ -345,7 +345,8 @@ function loyaltyMetaPayload() {
 function buildLoyaltyCardUrl(baseUrl, member) {
   const phone = encodeURIComponent(member.phone || "");
   const name = encodeURIComponent(member.name || "");
-  return `${baseUrl}/loyalty/card/${member.id}?phone=${phone}&name=${name}`;
+  const points = encodeURIComponent(String(member.points ?? 0));
+  return `${baseUrl}/loyalty/card/${member.id}?phone=${phone}&name=${name}&points=${points}`;
 }
 
 function buildLoyaltyPasskitUrl(baseUrl, member) {

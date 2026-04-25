@@ -9,6 +9,10 @@ function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name) || "";
 }
 
+function pointsCacheKey(phone) {
+  return `loyalty_points_${phone || "unknown"}`;
+}
+
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
@@ -31,6 +35,7 @@ async function loadCard() {
   const id = getMemberIdFromPath();
   const queryPhone = getQueryParam("phone");
   const queryName = getQueryParam("name");
+  const queryPoints = Number.parseInt(getQueryParam("points") || "0", 10);
   const pointsCurrent = document.getElementById("pointsCurrent");
   const pointsGoal = document.getElementById("pointsGoal");
   const ruleLine = document.getElementById("ruleLine");
@@ -70,6 +75,10 @@ async function loadCard() {
     if (data.pointsRuleText) ruleLine.textContent = data.pointsRuleText;
     if (data.rewardText) rewardLine.textContent = data.rewardText;
 
+    if (data.phone) {
+      localStorage.setItem(pointsCacheKey(data.phone), String(data.points ?? 0));
+    }
+
     cardName.textContent = data.name;
     cardPhone.textContent = data.phoneDisplay || data.phone || "";
     cardQr.src = data.qrDataUrl;
@@ -97,8 +106,14 @@ async function loadCard() {
       googleWalletBtn.classList.add("hidden");
     }
   } catch (e) {
-    pointsCurrent.textContent = "—";
-    pointsGoal.textContent = "—";
+    const cachedPoints = Number.parseInt(
+      localStorage.getItem(pointsCacheKey(queryPhone)) || `${queryPoints || 0}`,
+      10
+    );
+    pointsCurrent.textContent = Number.isFinite(cachedPoints)
+      ? String(Math.max(0, cachedPoints))
+      : "0";
+    pointsGoal.textContent = "10";
     cardName.textContent = "";
     cardPhone.textContent = "";
     cardStatus.textContent = e.message || "Could not load card.";
