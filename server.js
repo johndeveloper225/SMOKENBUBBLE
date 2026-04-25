@@ -33,9 +33,9 @@ const dbPath = process.env.VERCEL
   ? path.join("/tmp", "passes.db")
   : path.join(__dirname, "passes.db");
 const db = new sqlite3.Database(dbPath);
-const USE_VOLATILE_LOYALTY_STORE = Boolean(process.env.VERCEL);
-const loyaltyMembersById = new Map();
-const loyaltyMemberIdByPhone = new Map();
+const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim();
+const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 
 const APPLE_WALLET_CONFIG = {
   passTypeIdentifier: process.env.APPLE_PASS_TYPE_IDENTIFIER,
@@ -342,6 +342,31 @@ function loyaltyMetaPayload() {
   };
 }
 
+async function supabaseRequest(method, endpoint, { body, prefer } = {}) {
+  const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+  const headers = {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    "Content-Type": "application/json"
+  };
+  if (prefer) headers.Prefer = prefer;
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const err = new Error(payload?.message || "Supabase request failed.");
+    err.payload = payload;
+    err.status = response.status;
+    throw err;
+  }
+  return payload;
+}
+
 function buildLoyaltyCardUrl(baseUrl, member) {
   const phone = encodeURIComponent(member.phone || "");
   const name = encodeURIComponent(member.name || "");
@@ -356,8 +381,11 @@ function buildLoyaltyPasskitUrl(baseUrl, member) {
 }
 
 function getLoyaltyMemberById(memberId) {
-  if (USE_VOLATILE_LOYALTY_STORE) {
-    return Promise.resolve(loyaltyMembersById.get(memberId) || null);
+  if (USE_SUPABASE) {
+    return supabaseRequest(
+      "GET",
+      `loyalty_members?id=eq.${encodeURIComponent(memberId)}&select=*&limit=1`
+    ).then((rows) => rows?.[0] || null);
   }
   return new Promise((resolve, reject) => {
     db.get(
@@ -372,10 +400,11 @@ function getLoyaltyMemberById(memberId) {
 }
 
 function getLoyaltyMemberByPhone(phone) {
-  if (USE_VOLATILE_LOYALTY_STORE) {
-    const memberId = loyaltyMemberIdByPhone.get(phone);
-    if (!memberId) return Promise.resolve(null);
-    return Promise.resolve(loyaltyMembersById.get(memberId) || null);
+  if (USE_SUPABASE) {
+    return supabaseRequest(
+      "GET",
+      `loyalty_members?phone=eq.${encodeURIComponent(phone)}&select=*&limit=1`
+    ).then((rows) => rows?.[0] || null);
   }
   return new Promise((resolve, reject) => {
     db.get(
@@ -390,18 +419,18 @@ function getLoyaltyMemberByPhone(phone) {
 }
 
 function createLoyaltyMember(id, phone, name, createdAt) {
-  if (USE_VOLATILE_LOYALTY_STORE) {
-    const member = {
-      id,
-      phone,
-      name,
-      points: 0,
-      last_checkin_date: null,
-      createdAt
-    };
-    loyaltyMembersById.set(id, member);
-    loyaltyMemberIdByPhone.set(phone, id);
-    return Promise.resolve(member);
+  if (USE_SUPABASE) {
+    return supabaseRequest("POST", "loyalty_members", {
+      body: {
+        id,
+        phone,
+        name,
+        points: 0,
+        last_checkin_date: null,
+        createdat: createdAt
+      },
+      prefer: "return=representation"
+    }).then((rows) => rows?.[0] || null);
   }
   return new Promise((resolve, reject) => {
     db.run(
@@ -422,17 +451,35 @@ function createLoyaltyMember(id, phone, name, createdAt) {
   });
 }
 
-function addDailyCheckinPoint(memberId, today) {
-  if (USE_VOLATILE_LOYALTY_STORE) {
-    const member = loyaltyMembersById.get(memberId);
-    if (!member) return Promise.resolve({ status: "not_found" });
+async function addDailyCheckinPoint(memberId, today) {
+  if (USE_SUPABASE) {
+    const member = await getLoyaltyMemberById(memberId);
+    if (!member) return { status: "not_found" };
     if (member.last_checkin_date === today) {
-      return Promise.resolve({ status: "already_checked_in", member });
+      return { status: "already_checked_in", member };
     }
-    member.points += POINTS_PER_CHECKIN;
-    member.last_checkin_date = today;
-    loyaltyMembersById.set(memberId, member);
-    return Promise.resolve({ status: "ok", member });
+
+    const nextPoints = Number(member.points || 0) + POINTS_PER_CHECKIN;
+    const endpoint =
+      `loyalty_members?id=eq.${encodeURIComponent(memberId)}` +
+      `&points=eq.${encodeURIComponent(String(member.points || 0))}` +
+      `&or=(last_checkin_date.is.null,last_checkin_date.neq.${encodeURIComponent(today)})` +
+      "&select=*";
+
+    const rows = await supabaseRequest("PATCH", endpoint, {
+      body: { points: nextPoints, last_checkin_date: today },
+      prefer: "return=representation"
+    });
+
+    if (rows?.length) {
+      return { status: "ok", member: rows[0] };
+    }
+
+    const latest = await getLoyaltyMemberById(memberId);
+    if (latest?.last_checkin_date === today) {
+      return { status: "already_checked_in", member: latest };
+    }
+    return { status: "not_updated" };
   }
   return new Promise((resolve, reject) => {
     db.run(
@@ -592,12 +639,20 @@ app.post("/api/loyalty/register", async (req, res) => {
 
     const id = generateLoyaltyId();
     const createdAt = new Date().toISOString();
-    const created = await createLoyaltyMember(
-      id,
-      normalized,
-      String(name).trim(),
-      createdAt
-    );
+    let created;
+    try {
+      created = await createLoyaltyMember(
+        id,
+        normalized,
+        String(name).trim(),
+        createdAt
+      );
+    } catch (createErr) {
+      // In case of concurrent requests, fall back to existing phone owner.
+      const fallback = await getLoyaltyMemberByPhone(normalized);
+      if (!fallback) throw createErr;
+      created = fallback;
+    }
 
     const cardUrl = buildLoyaltyCardUrl(baseUrl, created);
     const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });

@@ -30,6 +30,32 @@ npm start
 
 If port `3000` is busy, server auto-falls forward to next free port.
 
+## Supabase Loyalty Persistence (Recommended on Vercel)
+
+Use Supabase so points do not reset between deploys/cold starts.
+
+1. In Supabase SQL Editor, run:
+
+```sql
+create table if not exists public.loyalty_members (
+  id text primary key,
+  phone text not null unique,
+  name text not null,
+  points integer not null default 0,
+  last_checkin_date text,
+  createdat text not null
+);
+```
+
+2. Add environment variables (local `.env` and Vercel project settings):
+
+```env
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+```
+
+3. Redeploy. Loyalty endpoints will automatically use Supabase when these vars exist.
+
 ## Apple Wallet Setup (Windows)
 
 1. Create Apple Pass Type ID + certificate in Apple Developer portal.
