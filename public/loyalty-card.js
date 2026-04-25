@@ -9,6 +9,14 @@ function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name) || "";
 }
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
+function isAndroid() {
+  return /Android/i.test(navigator.userAgent);
+}
+
 async function registerFromPhone(phone, name) {
   const response = await fetch("/api/loyalty/register", {
     method: "POST",
@@ -32,6 +40,7 @@ async function loadCard() {
   const cardQr = document.getElementById("cardQr");
   const cardStatus = document.getElementById("cardStatus");
   const appleWalletBtn = document.getElementById("appleWalletBtn");
+  const googleWalletBtn = document.getElementById("googleWalletBtn");
 
   if (!id && !queryPhone) {
     cardStatus.textContent = "Invalid card link.";
@@ -66,11 +75,26 @@ async function loadCard() {
     cardQr.src = data.qrDataUrl;
     cardStatus.textContent = "";
 
-    if (data.appleWalletLoyaltyUrl && data.appleWalletEnabled) {
-      appleWalletBtn.href = data.appleWalletLoyaltyUrl;
+    const memberId = data.id || id;
+    const phone = encodeURIComponent(data.phone || queryPhone || "");
+    const name = encodeURIComponent(data.name || queryName || "Member");
+    const successBase = `/wallet-success.html?memberId=${encodeURIComponent(
+      memberId
+    )}&phone=${phone}&name=${name}`;
+
+    if (isIOS() && data.appleWalletLoyaltyUrl && data.appleWalletEnabled) {
+      const next = encodeURIComponent(data.appleWalletLoyaltyUrl);
+      appleWalletBtn.href = `${successBase}&wallet=apple&next=${next}`;
       appleWalletBtn.classList.remove("hidden");
     } else {
       appleWalletBtn.classList.add("hidden");
+    }
+
+    if (isAndroid()) {
+      googleWalletBtn.href = `${successBase}&wallet=google`;
+      googleWalletBtn.classList.remove("hidden");
+    } else {
+      googleWalletBtn.classList.add("hidden");
     }
   } catch (e) {
     pointsCurrent.textContent = "—";
@@ -79,6 +103,7 @@ async function loadCard() {
     cardPhone.textContent = "";
     cardStatus.textContent = e.message || "Could not load card.";
     appleWalletBtn.classList.add("hidden");
+    googleWalletBtn.classList.add("hidden");
   }
 }
 

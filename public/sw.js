@@ -7,6 +7,8 @@ const URLS_TO_CACHE = [
   "/loyalty-card.js",
   "/checkin-scanner.html",
   "/checkin-scanner.js",
+  "/wallet-success.html",
+  "/wallet-success.js",
   "/manifest.json",
   "/scanner.html",
   "/scanner.js",
