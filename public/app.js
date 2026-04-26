@@ -1,10 +1,23 @@
 const form = document.getElementById("loyaltyForm");
+
+function buildPointsCongrats(points, goal) {
+  const safePoints = Number.isFinite(Number(points)) ? Number(points) : 0;
+  const safeGoal = Number.isFinite(Number(goal)) && Number(goal) > 0 ? Number(goal) : 10;
+  if (safePoints <= 0) return "Start today: your card is ready at 0/10.";
+  if (safePoints >= safeGoal) {
+    return `Congratulations! You reached ${safePoints}/${safeGoal} and unlocked your reward.`;
+  }
+  if (safePoints === 1) return "Congratulations! You earned your first point today: 1/10.";
+  return `Great job! You now have ${safePoints}/${safeGoal}. Keep going to reach your reward.`;
+}
+
 if (form) {
   const result = document.getElementById("result");
   const qrImage = document.getElementById("qrImage");
   const openCard = document.getElementById("openCard");
   const resultPoints = document.getElementById("resultPoints");
   const welcomeBack = document.getElementById("welcomeBack");
+  const pointsCongrats = document.getElementById("pointsCongrats");
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -32,6 +45,9 @@ if (form) {
       openCard.href = data.cardUrl;
       const goal = Number(data.pointsGoal) > 0 ? Number(data.pointsGoal) : 10;
       resultPoints.textContent = `${data.points ?? 0} / ${goal}`;
+      if (pointsCongrats) {
+        pointsCongrats.textContent = buildPointsCongrats(Number(data.points ?? 0), goal);
+      }
 
       if (data.returning) {
         welcomeBack.textContent =

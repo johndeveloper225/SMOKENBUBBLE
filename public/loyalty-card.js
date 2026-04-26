@@ -13,6 +13,17 @@ function pointsCacheKey(phone) {
   return `loyalty_points_${phone || "unknown"}`;
 }
 
+function buildPointsCongrats(points, goal) {
+  const safePoints = Number.isFinite(Number(points)) ? Number(points) : 0;
+  const safeGoal = Number.isFinite(Number(goal)) && Number(goal) > 0 ? Number(goal) : 10;
+  if (safePoints <= 0) return "Start today and earn your first point.";
+  if (safePoints >= safeGoal) {
+    return `Congratulations! You reached ${safePoints}/${safeGoal} and earned your reward.`;
+  }
+  if (safePoints === 1) return "Congratulations! You earned 1 point today (1/10).";
+  return `Congratulations! You now have ${safePoints}/${safeGoal}.`;
+}
+
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
@@ -46,6 +57,7 @@ async function loadCard() {
   const cardQr = document.getElementById("cardQr");
   const ownerQrSection = document.getElementById("ownerQrSection");
   const ownerQrHint = document.getElementById("ownerQrHint");
+  const pointsCongratsLine = document.getElementById("pointsCongratsLine");
   const cardStatus = document.getElementById("cardStatus");
   const appleWalletBtn = document.getElementById("appleWalletBtn");
   const googleWalletBtn = document.getElementById("googleWalletBtn");
@@ -83,6 +95,7 @@ async function loadCard() {
 
     pointsCurrent.textContent = String(data.points ?? 0);
     pointsGoal.textContent = String(goal);
+    pointsCongratsLine.textContent = buildPointsCongrats(Number(data.points ?? 0), goal);
     if (data.pointsRuleText) ruleLine.textContent = data.pointsRuleText;
     if (data.rewardText) rewardLine.textContent = data.rewardText;
 
@@ -131,6 +144,10 @@ async function loadCard() {
       ? String(Math.max(0, cachedPoints))
       : "0";
     pointsGoal.textContent = "10";
+    pointsCongratsLine.textContent = buildPointsCongrats(
+      Number.isFinite(cachedPoints) ? Math.max(0, cachedPoints) : 0,
+      10
+    );
     cardName.textContent = "";
     cardPhone.textContent = "";
     cardStatus.textContent = e.message || "Could not load card.";
