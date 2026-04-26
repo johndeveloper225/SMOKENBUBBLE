@@ -351,6 +351,18 @@ function isAdminPasswordValid(password) {
   );
 }
 
+function readAdminPassword(req) {
+  const headerValue = req.headers["x-admin-password"];
+  if (typeof headerValue === "string" && headerValue.trim()) {
+    return headerValue.trim();
+  }
+  const bodyValue = req.body?.password;
+  if (typeof bodyValue === "string" && bodyValue.trim()) {
+    return bodyValue.trim();
+  }
+  return "";
+}
+
 async function supabaseRequest(method, endpoint, { body, prefer } = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
   const headers = {
@@ -714,6 +726,17 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
   }
 });
 
+app.get("/api/public/join-qr", async (req, res) => {
+  try {
+    const baseUrl = resolveBaseUrl(req);
+    const joinUrl = `${baseUrl}/join.html`;
+    const qrDataUrl = await QRCode.toDataURL(joinUrl, { width: 320, margin: 2 });
+    res.json({ joinUrl, qrDataUrl });
+  } catch (_err) {
+    res.status(500).json({ error: "Could not generate join QR." });
+  }
+});
+
 app.post("/api/admin/loyalty/member/:id", async (req, res) => {
   if (!ADMIN_CARD_PASSWORD) {
     return res.status(503).json({
@@ -721,7 +744,7 @@ app.post("/api/admin/loyalty/member/:id", async (req, res) => {
     });
   }
 
-  if (!isAdminPasswordValid(req.body?.password)) {
+  if (!isAdminPasswordValid(readAdminPassword(req))) {
     return res.status(401).json({ error: "Invalid admin password." });
   }
 
@@ -799,6 +822,15 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
 });
 
 app.post("/api/loyalty/checkin", (req, res) => {
+  if (!ADMIN_CARD_PASSWORD) {
+    return res.status(503).json({
+      error: "Admin card password is not configured."
+    });
+  }
+  if (!isAdminPasswordValid(readAdminPassword(req))) {
+    return res.status(401).json({ error: "Invalid admin password." });
+  }
+
   const rawMemberId = req.body?.memberId;
   const memberIdInput =
     typeof rawMemberId === "string" && rawMemberId.trim()

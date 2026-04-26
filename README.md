@@ -71,6 +71,13 @@ ADMIN_CARD_PASSWORD=choose-a-strong-password
 
 From the check-in scanner result, use **Open private QR view** to access the protected page.
 
+## Scan-First Buyer Flow
+
+- Owner page (`/`) now shows a buyer join QR.
+- Buyer scans that QR and lands on `/join.html`.
+- Buyer enters phone + name after scanning, then opens their card.
+- Staff check-in scanner requires admin password and only owner/staff can check in points.
+
 ## Apple Wallet Setup (Windows)
 
 1. Create Apple Pass Type ID + certificate in Apple Developer portal.

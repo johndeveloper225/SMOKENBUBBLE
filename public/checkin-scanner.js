@@ -5,6 +5,7 @@ const rName = document.getElementById("rName");
 const rPoints = document.getElementById("rPoints");
 const rMessage = document.getElementById("rMessage");
 const adminCardLink = document.getElementById("adminCardLink");
+const adminPasswordInput = document.getElementById("adminPassword");
 
 let scanner = null;
 let handled = false;
@@ -30,9 +31,16 @@ function extractLoyaltyMemberId(decodedText) {
 }
 
 async function checkIn(memberId, phone, name) {
+  const adminPassword = (adminPasswordInput?.value || "").trim();
+  if (!adminPassword) {
+    throw new Error("Admin password is required.");
+  }
   const response = await fetch("/api/loyalty/checkin", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-password": adminPassword
+    },
     body: JSON.stringify({ memberId, phone, name })
   });
   const data = await response.json().catch(() => ({}));
@@ -101,6 +109,10 @@ async function processMember(member) {
 }
 
 async function startScanner() {
+  if (!(adminPasswordInput?.value || "").trim()) {
+    scanStatus.textContent = "Enter admin password first.";
+    return;
+  }
   handled = false;
   checkinResult.classList.add("hidden");
   if (scanner) return;

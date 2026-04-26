@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
+    <title>Join Smoke n Bubbles Loyalty</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="top">
+        <h1>Join Loyalty</h1>
+        <p>After scanning, enter your details to get your card.</p>
+      </header>
+
+      <section class="card">
+        <form id="loyaltyForm" class="form">
+          <label>
+            Phone number
+            <input
+              type="tel"
+              id="phone"
+              inputmode="numeric"
+              autocomplete="tel"
+              placeholder="5551234567"
+              required
+            />
+          </label>
+          <label>
+            Name on card
+            <input type="text" id="name" placeholder="Alex Rivera" required />
+          </label>
+          <button type="submit">Create my loyalty card</button>
+        </form>
+
+        <div id="result" class="result hidden">
+          <h3>Your card is ready</h3>
+          <p id="welcomeBack" class="muted small hidden"></p>
+          <div class="points-inline">
+            <span class="muted">Points</span>
+            <strong id="resultPoints">0</strong>
+          </div>
+          <p>
+            <a id="openCard" class="btn-link" href="#">Open loyalty card</a>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
