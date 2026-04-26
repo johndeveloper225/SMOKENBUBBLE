@@ -36,6 +36,7 @@ async function loadCard() {
   const queryPhone = getQueryParam("phone");
   const queryName = getQueryParam("name");
   const queryPoints = Number.parseInt(getQueryParam("points") || "0", 10);
+  const showOwnerQr = getQueryParam("showqr") === "1";
   const pointsCurrent = document.getElementById("pointsCurrent");
   const pointsGoal = document.getElementById("pointsGoal");
   const ruleLine = document.getElementById("ruleLine");
@@ -43,9 +44,19 @@ async function loadCard() {
   const cardName = document.getElementById("cardName");
   const cardPhone = document.getElementById("cardPhone");
   const cardQr = document.getElementById("cardQr");
+  const ownerQrSection = document.getElementById("ownerQrSection");
+  const ownerQrHint = document.getElementById("ownerQrHint");
   const cardStatus = document.getElementById("cardStatus");
   const appleWalletBtn = document.getElementById("appleWalletBtn");
   const googleWalletBtn = document.getElementById("googleWalletBtn");
+
+  if (showOwnerQr) {
+    ownerQrSection.classList.remove("hidden");
+    ownerQrHint.classList.remove("hidden");
+  } else {
+    ownerQrSection.classList.add("hidden");
+    ownerQrHint.classList.add("hidden");
+  }
 
   if (!id && !queryPhone) {
     cardStatus.textContent = "Invalid card link.";
@@ -81,7 +92,9 @@ async function loadCard() {
 
     cardName.textContent = data.name;
     cardPhone.textContent = data.phoneDisplay || data.phone || "";
-    cardQr.src = data.qrDataUrl;
+    if (showOwnerQr) {
+      cardQr.src = data.qrDataUrl;
+    }
     cardStatus.textContent = "";
 
     const memberId = data.id || id;
