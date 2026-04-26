@@ -104,6 +104,11 @@ button,
   display: none;
 }
 
+.snb-qr-wrap.hidden,
+.snb-scan-hint.hidden {
+  display: none;
+}
+
 .wallet-card {
   border-radius: 20px;
   padding: 20px;

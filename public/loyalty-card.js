@@ -92,8 +92,12 @@ async function loadCard() {
 
     cardName.textContent = data.name;
     cardPhone.textContent = data.phoneDisplay || data.phone || "";
-    if (showOwnerQr) {
+    if (showOwnerQr && data.qrDataUrl) {
       cardQr.src = data.qrDataUrl;
+    } else {
+      cardQr.removeAttribute("src");
+      ownerQrSection.classList.add("hidden");
+      ownerQrHint.classList.add("hidden");
     }
     cardStatus.textContent = "";
 
