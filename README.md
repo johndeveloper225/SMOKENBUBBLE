@@ -56,6 +56,21 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 
 3. Redeploy. Loyalty endpoints will automatically use Supabase when these vars exist.
 
+## Private Admin QR View
+
+Customers see a card without QR by default. Owners can open a password-protected QR page:
+
+- URL: `/admin/card/:id`
+- API: `POST /api/admin/loyalty/member/:id` (requires password)
+
+Set this env var locally and in Vercel:
+
+```env
+ADMIN_CARD_PASSWORD=choose-a-strong-password
+```
+
+From the check-in scanner result, use **Open private QR view** to access the protected page.
+
 ## Apple Wallet Setup (Windows)
 
 1. Create Apple Pass Type ID + certificate in Apple Developer portal.

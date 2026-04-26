@@ -36,6 +36,7 @@ const db = new sqlite3.Database(dbPath);
 const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const ADMIN_CARD_PASSWORD = (process.env.ADMIN_CARD_PASSWORD || "").trim();
 
 const APPLE_WALLET_CONFIG = {
   passTypeIdentifier: process.env.APPLE_PASS_TYPE_IDENTIFIER,
@@ -340,6 +341,14 @@ function loyaltyMetaPayload() {
     pointsRuleText: LOYALTY_RULE_TEXT,
     rewardText: LOYALTY_REWARD_TEXT
   };
+}
+
+function isAdminPasswordValid(password) {
+  return Boolean(
+    ADMIN_CARD_PASSWORD &&
+      typeof password === "string" &&
+      password.trim() === ADMIN_CARD_PASSWORD
+  );
 }
 
 async function supabaseRequest(method, endpoint, { body, prefer } = {}) {
@@ -705,6 +714,42 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
   }
 });
 
+app.post("/api/admin/loyalty/member/:id", async (req, res) => {
+  if (!ADMIN_CARD_PASSWORD) {
+    return res.status(503).json({
+      error: "Admin card password is not configured."
+    });
+  }
+
+  if (!isAdminPasswordValid(req.body?.password)) {
+    return res.status(401).json({ error: "Invalid admin password." });
+  }
+
+  const { id } = req.params;
+  try {
+    const row = await getLoyaltyMemberById(id);
+    if (!row) {
+      return res.status(404).json({ error: "Member not found." });
+    }
+    const baseUrl = resolveBaseUrl(req);
+    const cardUrl = buildLoyaltyCardUrl(baseUrl, row);
+    const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 280, margin: 2 });
+    return res.json({
+      id: row.id,
+      phone: row.phone,
+      phoneDisplay: formatPhoneDisplay(row.phone),
+      name: row.name,
+      points: row.points,
+      lastCheckinDate: row.last_checkin_date,
+      cardUrl,
+      qrDataUrl,
+      ...loyaltyMetaPayload()
+    });
+  } catch (_err) {
+    return res.status(500).json({ error: "Database error." });
+  }
+});
+
 app.get("/api/passkit/loyalty/:id", async (req, res) => {
   if (!isAppleWalletConfigured()) {
     return res.status(503).json({
@@ -885,6 +930,10 @@ app.get("/api/loyalty/wallet-preview/:id", async (req, res) => {
 
 app.get("/loyalty/card/:id", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "loyalty-card.html"));
+});
+
+app.get("/admin/card/:id", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin-card.html"));
 });
 
 app.get("/pass/:id", (req, res) => {

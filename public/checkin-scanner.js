@@ -4,6 +4,7 @@ const checkinResult = document.getElementById("checkinResult");
 const rName = document.getElementById("rName");
 const rPoints = document.getElementById("rPoints");
 const rMessage = document.getElementById("rMessage");
+const adminCardLink = document.getElementById("adminCardLink");
 
 let scanner = null;
 let handled = false;
@@ -69,6 +70,12 @@ async function processMember(member) {
     rName.textContent = data.name;
     rPoints.textContent = String(data.points);
     rMessage.textContent = data.message || "";
+    if (memberId) {
+      adminCardLink.href = `/admin/card/${encodeURIComponent(memberId)}`;
+      adminCardLink.classList.remove("hidden");
+    } else {
+      adminCardLink.classList.add("hidden");
+    }
     checkinResult.classList.remove("hidden");
     scanStatus.textContent = "Check-in complete.";
   } catch (e) {
@@ -76,6 +83,7 @@ async function processMember(member) {
     rName.textContent = p.name || "—";
     rPoints.textContent = p.points != null ? String(p.points) : "—";
     rMessage.textContent = e.message || "Error";
+    adminCardLink.classList.add("hidden");
     checkinResult.classList.remove("hidden");
     scanStatus.textContent =
       e.status === 409 ? "Already checked in today." : "Check-in failed.";
