@@ -100,6 +100,10 @@ function generateLoyaltyId() {
 
 function normalizePhone(input) {
   let digits = String(input || "").replace(/\D/g, "");
+  // Normalize common country-code inputs to a stable local key.
+  if (digits.length > 10) {
+    digits = digits.slice(-10);
+  }
   if (digits.length === 11 && digits.startsWith("1")) {
     digits = digits.slice(1);
   }

@@ -12,6 +12,8 @@ function buildPointsCongrats(points, goal) {
 }
 
 if (form) {
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.textContent = "Check out";
   const result = document.getElementById("result");
   const qrImage = document.getElementById("qrImage");
   const openCard = document.getElementById("openCard");
