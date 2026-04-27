@@ -1,4 +1,4 @@
-const CACHE_NAME = "loyalty-wallet-v14";
+const CACHE_NAME = "loyalty-wallet-v15";
 const URLS_TO_CACHE = [
   "/",
   "/styles.css",
@@ -41,7 +41,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.mode === "navigate") {
+  const requestUrl = new URL(event.request.url);
+  const isLocalAsset = requestUrl.origin === self.location.origin;
+  const isHtmlNavigation = event.request.mode === "navigate";
+  const isScriptOrStyle =
+    isLocalAsset &&
+    (event.request.destination === "script" ||
+      event.request.destination === "style");
+
+  if (isHtmlNavigation || isScriptOrStyle) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

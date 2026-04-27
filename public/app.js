@@ -30,7 +30,7 @@ if (form) {
     if (!phone || !name) return;
 
     try {
-      const response = await fetch("/api/loyalty/register", {
+      const response = await fetch("/api/loyalty/auto-checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, name })
@@ -61,7 +61,12 @@ if (form) {
 
       result.classList.remove("hidden");
       // Checkout should open the digital card immediately.
-      window.location.href = data.cardUrl;
+      const fallbackCardUrl = `/loyalty/card/${encodeURIComponent(
+        data.id || ""
+      )}?phone=${encodeURIComponent(data.phone || phone)}&name=${encodeURIComponent(
+        data.name || name
+      )}&points=${encodeURIComponent(String(data.points ?? 0))}`;
+      window.location.replace(data.cardUrl || fallbackCardUrl);
     } catch (error) {
       alert(error.message);
     }

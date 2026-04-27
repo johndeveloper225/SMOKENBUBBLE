@@ -701,6 +701,65 @@ app.post("/api/loyalty/register", async (req, res) => {
   }
 });
 
+app.post("/api/loyalty/auto-checkin", async (req, res) => {
+  try {
+    const { phone, name } = req.body;
+    const normalized = normalizePhone(phone);
+    const cleanName = String(name || "").trim();
+    if (!cleanName) {
+      return res.status(400).json({ error: "Name is required." });
+    }
+    if (normalized.length < 10) {
+      return res.status(400).json({
+        error: "Enter a valid phone number (at least 10 digits)."
+      });
+    }
+
+    const baseUrl = resolveBaseUrl(req);
+    let member = await getLoyaltyMemberByPhone(normalized);
+    if (!member) {
+      const id = generateLoyaltyId();
+      member = await createLoyaltyMember(
+        id,
+        normalized,
+        cleanName,
+        new Date().toISOString()
+      );
+    }
+
+    const today = localCalendarDate();
+    if (member.last_checkin_date !== today) {
+      const checkin = await addDailyCheckinPoint(member.id, today);
+      if (checkin.status === "ok" && checkin.member) {
+        member = checkin.member;
+      } else {
+        const updated = await getLoyaltyMemberById(member.id);
+        if (updated) member = updated;
+      }
+    }
+
+    const cardUrl = buildLoyaltyCardUrl(baseUrl, member);
+    const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
+    return res.json({
+      id: member.id,
+      phone: member.phone,
+      phoneDisplay: formatPhoneDisplay(member.phone),
+      name: member.name,
+      points: member.points,
+      lastCheckinDate: member.last_checkin_date,
+      cardUrl,
+      qrDataUrl,
+      returning: true,
+      autoCheckedIn: true,
+      appleWalletLoyaltyUrl: buildLoyaltyPasskitUrl(baseUrl, member),
+      appleWalletEnabled: isAppleWalletConfigured(),
+      ...loyaltyMetaPayload()
+    });
+  } catch (_e) {
+    return res.status(500).json({ error: "Unexpected server error." });
+  }
+});
+
 app.get("/api/loyalty/member/:id", async (req, res) => {
   const { id } = req.params;
 
