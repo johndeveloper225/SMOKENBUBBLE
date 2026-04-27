@@ -60,6 +60,8 @@ if (form) {
       }
 
       result.classList.remove("hidden");
+      // Checkout should open the digital card immediately.
+      window.location.href = data.cardUrl;
     } catch (error) {
       alert(error.message);
     }
