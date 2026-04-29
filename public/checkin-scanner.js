@@ -1,3 +1,7 @@
+const adminAccessForm = document.getElementById("adminAccessForm");
+const adminPasswordInput = document.getElementById("adminPassword");
+const showPassword = document.getElementById("showPassword");
+const scannerSection = document.getElementById("scannerSection");
 const startScanBtn = document.getElementById("startScanBtn");
 const scanStatus = document.getElementById("scanStatus");
 const checkinResult = document.getElementById("checkinResult");
@@ -5,10 +9,47 @@ const rName = document.getElementById("rName");
 const rPoints = document.getElementById("rPoints");
 const rMessage = document.getElementById("rMessage");
 const adminCardLink = document.getElementById("adminCardLink");
-const adminPasswordInput = document.getElementById("adminPassword");
 
 let scanner = null;
 let handled = false;
+let isAdminUnlocked = false;
+
+showPassword.addEventListener("change", () => {
+  adminPasswordInput.type = showPassword.checked ? "text" : "password";
+});
+
+async function unlockAdmin() {
+  const adminPassword = (adminPasswordInput?.value || "").trim();
+  if (!adminPassword) {
+    scanStatus.textContent = "Enter admin password.";
+    return;
+  }
+  scanStatus.textContent = "Signing in...";
+  const response = await fetch("/api/admin/auth", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-password": adminPassword
+    },
+    body: JSON.stringify({ password: adminPassword })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Sign in failed.");
+  }
+  isAdminUnlocked = true;
+  scannerSection.classList.remove("hidden");
+  scanStatus.textContent = "Signed in. Tap Start scanner.";
+}
+
+adminAccessForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    await unlockAdmin();
+  } catch (e) {
+    scanStatus.textContent = e.message || "Sign in failed.";
+  }
+});
 
 function extractLoyaltyMemberId(decodedText) {
   try {
@@ -109,8 +150,8 @@ async function processMember(member) {
 }
 
 async function startScanner() {
-  if (!(adminPasswordInput?.value || "").trim()) {
-    scanStatus.textContent = "Enter admin password first.";
+  if (!isAdminUnlocked) {
+    scanStatus.textContent = "Sign in first.";
     return;
   }
   handled = false;

@@ -18,19 +18,28 @@
       </header>
 
       <section class="card">
-        <label>
-          Admin password
-          <input
-            id="adminPassword"
-            type="password"
-            autocomplete="current-password"
-            placeholder="Enter admin password"
-            required
-          />
-        </label>
-        <div id="reader"></div>
-        <p id="scanStatus" class="status-message">Camera not started.</p>
-        <button type="button" id="startScanBtn">Start scanner</button>
+        <form id="adminAccessForm" class="form">
+          <label>
+            Admin password
+            <input
+              id="adminPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter admin password"
+              required
+            />
+          </label>
+          <label class="small muted">
+            <input id="showPassword" type="checkbox" />
+            Show password
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+        <div id="scannerSection" class="hidden">
+          <div id="reader"></div>
+          <p id="scanStatus" class="status-message">Camera not started.</p>
+          <button type="button" id="startScanBtn">Start scanner</button>
+        </div>
       </section>
 
       <section id="checkinResult" class="card hidden">

@@ -856,6 +856,18 @@ app.post("/api/admin/loyalty/member/:id", async (req, res) => {
   }
 });
 
+app.post("/api/admin/auth", async (req, res) => {
+  if (!ADMIN_CARD_PASSWORD) {
+    return res.status(503).json({
+      error: "Admin card password is not configured."
+    });
+  }
+  if (!isAdminPasswordValid(readAdminPassword(req))) {
+    return res.status(401).json({ error: "Invalid admin password." });
+  }
+  return res.json({ ok: true });
+});
+
 app.get("/api/passkit/loyalty/:id", async (req, res) => {
   if (!isAppleWalletConfigured()) {
     return res.status(503).json({
