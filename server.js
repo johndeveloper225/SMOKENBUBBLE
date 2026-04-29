@@ -202,11 +202,15 @@ function getCertificates() {
     );
   }
 
+  const signerKeyPassphrase = String(
+    APPLE_WALLET_CONFIG.signerKeyPassphrase || ""
+  ).trim();
+
   return {
     wwdr,
     signerCert,
     signerKey,
-    signerKeyPassphrase: APPLE_WALLET_CONFIG.signerKeyPassphrase
+    ...(signerKeyPassphrase ? { signerKeyPassphrase } : {})
   };
 }
 
