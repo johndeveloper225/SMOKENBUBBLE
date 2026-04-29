@@ -1,15 +1,14 @@
-const form = document.getElementById("adminMembersAccessForm");
-const passwordInput = document.getElementById("adminMembersPassword");
-const showPassword = document.getElementById("showMembersPassword");
 const statusEl = document.getElementById("membersStatus");
 const membersSection = document.getElementById("membersSection");
 const refreshBtn = document.getElementById("refreshMembersBtn");
 const membersTbody = document.getElementById("membersTbody");
 const themeToggleBtn = document.getElementById("themeToggleBtn");
 
-let isUnlocked = false;
-
 const THEME_KEY = "owner_theme";
+
+function getAdminPassword() {
+  return (sessionStorage.getItem("admin_password") || "").trim();
+}
 
 function applyTheme(theme) {
   const safeTheme = theme === "dark" ? "dark" : "light";
@@ -17,10 +16,6 @@ function applyTheme(theme) {
   localStorage.setItem(THEME_KEY, safeTheme);
   themeToggleBtn.textContent = safeTheme === "dark" ? "Light mode" : "Dark mode";
 }
-
-showPassword.addEventListener("change", () => {
-  passwordInput.type = showPassword.checked ? "text" : "password";
-});
 
 themeToggleBtn.addEventListener("click", () => {
   const current = document.documentElement.getAttribute("data-theme") || "light";
@@ -41,8 +36,12 @@ async function auth(password) {
 }
 
 async function loadMembers() {
-  if (!isUnlocked) return;
-  const password = (passwordInput.value || "").trim();
+  const password = getAdminPassword();
+  if (!password) {
+    window.location.replace("/owner.html");
+    return;
+  }
+
   statusEl.textContent = "Loading customers...";
   membersTbody.innerHTML = "";
 
@@ -55,6 +54,13 @@ async function loadMembers() {
     body: JSON.stringify({ password })
   });
   const data = await response.json().catch(() => ({}));
+  if (response.status === 401) {
+    sessionStorage.removeItem("admin_password");
+    statusEl.innerHTML =
+      'Session expired or invalid. <a href="/owner.html">Sign in on Owner</a> again.';
+    membersSection.classList.add("hidden");
+    return;
+  }
   if (!response.ok) throw new Error(data.error || "Could not load customers.");
 
   const members = Array.isArray(data.members) ? data.members : [];
@@ -76,23 +82,6 @@ async function loadMembers() {
   statusEl.textContent = `Loaded ${members.length} customer(s).`;
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const password = (passwordInput.value || "").trim();
-  if (!password) {
-    statusEl.textContent = "Enter admin password.";
-    return;
-  }
-  statusEl.textContent = "Signing in...";
-  try {
-    await auth(password);
-    sessionStorage.setItem("admin_password", password);
-    window.location.replace("/owner-qr.html");
-  } catch (e) {
-    statusEl.textContent = e.message || "Sign in failed.";
-  }
-});
-
 refreshBtn.addEventListener("click", async () => {
   try {
     await loadMembers();
@@ -101,20 +90,28 @@ refreshBtn.addEventListener("click", async () => {
   }
 });
 
-async function trySessionUnlock() {
-  const pwd = sessionStorage.getItem("admin_password");
-  if (!pwd) return;
-  passwordInput.value = pwd;
+async function init() {
+  const pwd = getAdminPassword();
+  if (!pwd) {
+    window.location.replace("/owner.html");
+    return;
+  }
+
   try {
     await auth(pwd);
-    isUnlocked = true;
-    membersSection.classList.remove("hidden");
-    await loadMembers();
   } catch {
     sessionStorage.removeItem("admin_password");
-    passwordInput.value = "";
+    window.location.replace("/owner.html");
+    return;
+  }
+
+  membersSection.classList.remove("hidden");
+  try {
+    await loadMembers();
+  } catch (e) {
+    statusEl.textContent = e.message || "Could not load customers.";
   }
 }
 
 applyTheme(localStorage.getItem(THEME_KEY) || "light");
-trySessionUnlock();
+init();
