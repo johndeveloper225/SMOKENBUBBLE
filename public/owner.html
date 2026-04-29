@@ -7,37 +7,47 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
-    <title>Owner Dashboard</title>
+    <title>Owner Access</title>
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <main class="container">
       <header class="top">
-        <h1>Owner Dashboard</h1>
-        <p>Private tools for staff check-in and buyer onboarding.</p>
+        <h1>Owner Access</h1>
+        <p>Sign in with admin password to open the back office.</p>
       </header>
 
       <section class="card">
-        <h2>Buyer scan-to-join QR</h2>
-        <p class="muted small">
-          Buyers scan this QR first, then they enter name and phone on their phone.
-        </p>
-        <img id="joinQrImage" alt="Buyer join QR code" />
+        <form id="ownerAccessForm" class="form">
+          <label>
+            Admin password
+            <input
+              id="ownerPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter admin password"
+              required
+            />
+          </label>
+          <label class="small muted">
+            <input id="showOwnerPassword" type="checkbox" />
+            Show password
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+        <p id="ownerStatus" class="status-message"></p>
         <p class="small muted">
-          Join link: <a id="joinUrl" href="/join.html">/join.html</a>
+          Customer page: <a href="/join.html">/join.html</a>
         </p>
-      </section>
-
-      <section class="card">
-        <h2>Staff: check-in scanner</h2>
-        <p class="muted small">
-          Only owner/staff with admin password can run scanner check-ins.
+        <p>
+          <button id="themeToggleBtn" type="button" class="btn-link secondary">
+            Switch to Dark Theme
+          </button>
         </p>
-        <a class="btn-link" href="/checkin-scanner.html">Open check-in scanner</a>
       </section>
     </main>
 
-    <script src="/owner-home.js"></script>
+    <script src="/owner-auth.js"></script>
   </body>
 </html>

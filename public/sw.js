@@ -1,9 +1,10 @@
-const CACHE_NAME = "loyalty-wallet-v19";
+const CACHE_NAME = "loyalty-wallet-v20";
 const URLS_TO_CACHE = [
   "/",
   "/styles.css",
   "/app.js",
   "/owner-home.js",
+  "/owner-auth.js",
   "/owner.html",
   "/join.html",
   "/loyalty-card.html",

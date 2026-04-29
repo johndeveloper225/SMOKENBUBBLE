@@ -9,6 +9,14 @@
   --wallet2: #1f2937;
 }
 
+:root[data-theme="dark"] {
+  --bg: #0b1220;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --card: #111827;
+  --primary: #14b8a6;
+}
+
 * {
   box-sizing: border-box;
 }

@@ -14,7 +14,7 @@
     <main class="container">
       <header class="top">
         <h1>Customers Back Office</h1>
-        <p>Owner-only view of customer names, phones and points.</p>
+        <p>Owner-only scanner and customer management.</p>
       </header>
 
       <section class="card">
@@ -38,7 +38,30 @@
         <p id="membersStatus" class="status-message"></p>
       </section>
 
+      <section id="adminPanel" class="card hidden">
+        <p>
+          <button id="themeToggleBtn" type="button" class="btn-link secondary">
+            Switch to Dark Theme
+          </button>
+        </p>
+      </section>
+
+      <section id="scannerSection" class="card hidden">
+        <h2>Scanner</h2>
+        <div id="reader"></div>
+        <p id="scanStatus" class="status-message">Camera not started.</p>
+        <button type="button" id="startScanBtn">Start scanner</button>
+      </section>
+
+      <section id="checkinResult" class="card hidden">
+        <h2>Check-in result</h2>
+        <p><strong>Name:</strong> <span id="rName"></span></p>
+        <p><strong>Points:</strong> <span id="rPoints"></span></p>
+        <p id="rMessage" class="muted"></p>
+      </section>
+
       <section id="membersSection" class="card hidden">
+        <h2>Customers</h2>
         <p>
           <button type="button" id="refreshMembersBtn">Refresh list</button>
         </p>
@@ -56,9 +79,10 @@
         </div>
       </section>
 
-      <a href="/checkin-scanner.html" class="btn-link secondary">Back to scanner</a>
+      <a href="/owner.html" class="btn-link secondary">Back</a>
     </main>
 
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="/admin-members.js"></script>
   </body>
 </html>
