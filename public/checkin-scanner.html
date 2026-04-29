@@ -54,6 +54,27 @@
         </p>
       </section>
 
+      <section id="membersSection" class="card hidden">
+        <h2>Customers</h2>
+        <p class="muted small">Signed-up members with points balance.</p>
+        <p>
+          <button type="button" id="refreshMembersBtn">Refresh list</button>
+        </p>
+        <div id="membersStatus" class="muted small"></div>
+        <div style="overflow-x: auto">
+          <table id="membersTable" style="width: 100%; border-collapse: collapse">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 6px">Name</th>
+                <th style="text-align: left; padding: 6px">Phone</th>
+                <th style="text-align: left; padding: 6px">Points</th>
+              </tr>
+            </thead>
+            <tbody id="membersTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <a href="/" class="btn-link secondary">Back</a>
     </main>
 

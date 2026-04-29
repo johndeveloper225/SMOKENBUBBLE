@@ -868,6 +868,53 @@ app.post("/api/admin/auth", async (req, res) => {
   return res.json({ ok: true });
 });
 
+app.post("/api/admin/loyalty/members", async (req, res) => {
+  if (!ADMIN_CARD_PASSWORD) {
+    return res.status(503).json({
+      error: "Admin card password is not configured."
+    });
+  }
+  if (!isAdminPasswordValid(readAdminPassword(req))) {
+    return res.status(401).json({ error: "Invalid admin password." });
+  }
+
+  try {
+    let members = [];
+    if (USE_SUPABASE) {
+      members = await supabaseRequest(
+        "GET",
+        "loyalty_members?select=id,name,phone,points,last_checkin_date,createdat&order=createdat.desc"
+      );
+    } else {
+      members = await new Promise((resolve, reject) => {
+        db.all(
+          "SELECT id, name, phone, points, last_checkin_date, createdAt FROM loyalty_members ORDER BY createdAt DESC",
+          [],
+          (err, rows) => {
+            if (err) return reject(err);
+            resolve(rows || []);
+          }
+        );
+      });
+    }
+
+    return res.json({
+      ok: true,
+      members: members.map((m) => ({
+        id: m.id,
+        name: m.name,
+        phone: m.phone,
+        phoneDisplay: formatPhoneDisplay(m.phone),
+        points: Number(m.points || 0),
+        lastCheckinDate: m.last_checkin_date || null,
+        createdAt: m.createdat || m.createdAt || null
+      }))
+    });
+  } catch (_err) {
+    return res.status(500).json({ error: "Could not load members." });
+  }
+});
+
 app.get("/api/passkit/loyalty/:id", async (req, res) => {
   if (!isAppleWalletConfigured()) {
     return res.status(503).json({
