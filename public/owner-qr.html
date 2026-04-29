@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
+    <title>Store scan code</title>
+    <link rel="stylesheet" href="/styles.css?v=24" />
+  </head>
+  <body class="owner-qr-body">
+    <button type="button" id="themeToggleBtn" class="owner-qr-theme-toggle">
+      Theme
+    </button>
+
+    <main class="container owner-qr-page">
+      <header class="top owner-qr-top">
+        <h1>Store scan code</h1>
+        <p>Customers scan this to open the join page. No camera on this screen.</p>
+      </header>
+
+      <section class="card owner-qr-card">
+        <p class="small muted" style="margin-top: 0">Join link</p>
+        <p>
+          <a id="joinUrl" href="/join.html" class="btn-link secondary" style="margin-top: 0"
+            >/join.html</a
+          >
+        </p>
+        <div class="owner-qr-image-wrap">
+          <img id="joinQrImage" src="" alt="Join QR code" width="320" height="320" />
+        </div>
+        <p id="qrLoadStatus" class="status-message muted small"></p>
+      </section>
+
+      <p class="owner-qr-actions">
+        <a href="/admin-members.html" class="btn-link">Customers back office</a>
+        <button type="button" id="ownerQrSignOut" class="btn-link secondary">Sign out</button>
+      </p>
+    </main>
+
+    <script src="/owner-qr.js?v=24"></script>
+  </body>
+</html>

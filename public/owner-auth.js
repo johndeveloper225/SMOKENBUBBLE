@@ -10,8 +10,7 @@ function applyTheme(theme) {
   const safeTheme = theme === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", safeTheme);
   localStorage.setItem(THEME_KEY, safeTheme);
-  themeToggleBtn.textContent =
-    safeTheme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme";
+  themeToggleBtn.textContent = safeTheme === "dark" ? "Light mode" : "Dark mode";
 }
 
 showPassword.addEventListener("change", () => {
@@ -45,7 +44,7 @@ form.addEventListener("submit", async (event) => {
       throw new Error(data.error || "Sign in failed.");
     }
     sessionStorage.setItem("admin_password", password);
-    window.location.href = "/admin-members.html";
+    window.location.href = "/owner-qr.html";
   } catch (e) {
     statusEl.textContent = e.message || "Sign in failed.";
   }

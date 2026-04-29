@@ -1,10 +1,12 @@
-const CACHE_NAME = "loyalty-wallet-v20";
+const CACHE_NAME = "loyalty-wallet-v23";
 const URLS_TO_CACHE = [
   "/",
   "/styles.css",
   "/app.js",
   "/owner-home.js",
   "/owner-auth.js",
+  "/owner-qr.html",
+  "/owner-qr.js",
   "/owner.html",
   "/join.html",
   "/loyalty-card.html",
@@ -53,9 +55,19 @@ self.addEventListener("fetch", (event) => {
     (event.request.destination === "script" ||
       event.request.destination === "style");
 
-  if (isHtmlNavigation || isScriptOrStyle) {
+  // HTML: always hit network first with no-store so deploys are not masked by SW/cache.
+  if (isHtmlNavigation && isLocalAsset) {
     event.respondWith(
-      fetch(event.request)
+      fetch(new Request(event.request, { cache: "no-store" })).catch(() =>
+        caches.match(event.request)
+      )
+    );
+    return;
+  }
+
+  if (isScriptOrStyle) {
+    event.respondWith(
+      fetch(new Request(event.request, { cache: "no-store" }))
         .then((response) => {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));

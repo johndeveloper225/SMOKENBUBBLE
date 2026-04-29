@@ -27,7 +27,16 @@ function resolveBaseUrl(req) {
 }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    setHeaders(res, filePath) {
+      const normalized = filePath.replace(/\\/g, "/");
+      if (normalized.endsWith(".html") || /\/sw\.js$/.test(normalized)) {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      }
+    }
+  })
+);
 
 const dbPath = process.env.VERCEL
   ? path.join("/tmp", "passes.db")

@@ -3,18 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-store" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
     <title>Customers Back Office</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=24" />
   </head>
   <body>
-    <main class="container">
+    <button type="button" id="themeToggleBtn" class="owner-qr-theme-toggle">
+      Theme
+    </button>
+
+    <main class="container snb-page-padded">
       <header class="top">
         <h1>Customers Back Office</h1>
-        <p>Owner-only scanner and customer management.</p>
+        <p>Customer list only — store QR opens after sign-in on the owner page.</p>
       </header>
 
       <section class="card">
@@ -38,28 +43,6 @@
         <p id="membersStatus" class="status-message"></p>
       </section>
 
-      <section id="adminPanel" class="card hidden">
-        <p>
-          <button id="themeToggleBtn" type="button" class="btn-link secondary">
-            Switch to Dark Theme
-          </button>
-        </p>
-      </section>
-
-      <section id="scannerSection" class="card hidden">
-        <h2>Scanner</h2>
-        <div id="reader"></div>
-        <p id="scanStatus" class="status-message">Camera not started.</p>
-        <button type="button" id="startScanBtn">Start scanner</button>
-      </section>
-
-      <section id="checkinResult" class="card hidden">
-        <h2>Check-in result</h2>
-        <p><strong>Name:</strong> <span id="rName"></span></p>
-        <p><strong>Points:</strong> <span id="rPoints"></span></p>
-        <p id="rMessage" class="muted"></p>
-      </section>
-
       <section id="membersSection" class="card hidden">
         <h2>Customers</h2>
         <p>
@@ -79,10 +62,10 @@
         </div>
       </section>
 
+      <a href="/owner-qr.html" class="btn-link secondary">Store scan code</a>
       <a href="/owner.html" class="btn-link secondary">Back</a>
     </main>
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="/admin-members.js"></script>
+    <script src="/admin-members.js?v=24"></script>
   </body>
 </html>

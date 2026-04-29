@@ -505,3 +505,119 @@ code {
 .snb-back:hover {
   text-decoration: underline;
 }
+
+/* Owner store QR page: fixed theme + entrance animation */
+.owner-qr-body {
+  min-height: 100vh;
+}
+
+.owner-qr-theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme="dark"] .owner-qr-theme-toggle {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes ownerQrPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ownerQrCardFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes ownerQrShimmer {
+  0%,
+  100% {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  }
+  50% {
+    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.2);
+  }
+}
+
+:root[data-theme="dark"] .owner-qr-card {
+  animation:
+    ownerQrPageIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both,
+    ownerQrCardFloat 5s ease-in-out 0.75s infinite,
+    ownerQrShimmerDark 4s ease-in-out 0.75s infinite;
+}
+
+@keyframes ownerQrShimmerDark {
+  0%,
+  100% {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 12px 36px rgba(20, 184, 166, 0.22);
+  }
+}
+
+/* Pages with fixed top-right theme control */
+.snb-page-padded {
+  padding-top: 52px;
+}
+
+.owner-qr-page {
+  padding-top: 52px;
+  animation: ownerQrPageIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.owner-qr-top h1 {
+  animation: ownerQrPageIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.owner-qr-card {
+  animation:
+    ownerQrPageIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both,
+    ownerQrCardFloat 5s ease-in-out 0.75s infinite,
+    ownerQrShimmer 4s ease-in-out 0.75s infinite;
+}
+
+.owner-qr-image-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.owner-qr-image-wrap img {
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.owner-qr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.owner-qr-actions .btn-link {
+  margin-top: 0;
+}
