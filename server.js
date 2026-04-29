@@ -182,6 +182,26 @@ function getCertificates() {
     throw new Error("Apple Wallet certificates are incomplete.");
   }
 
+  const wwdrText = Buffer.from(wwdr).toString("utf8");
+  const signerCertText = Buffer.from(signerCert).toString("utf8");
+  const signerKeyText = Buffer.from(signerKey).toString("utf8");
+
+  if (!wwdrText.includes("BEGIN CERTIFICATE")) {
+    throw new Error(
+      "APPLE_WWDR_PEM/BASE64 is invalid. Expected a PEM certificate."
+    );
+  }
+  if (!signerCertText.includes("BEGIN CERTIFICATE")) {
+    throw new Error(
+      "APPLE_SIGNER_CERT_PEM/BASE64 is invalid. Expected a PEM certificate."
+    );
+  }
+  if (!signerKeyText.includes("BEGIN PRIVATE KEY")) {
+    throw new Error(
+      "APPLE_SIGNER_KEY_PEM/BASE64 is invalid. Expected a PEM private key."
+    );
+  }
+
   return {
     wwdr,
     signerCert,
@@ -876,10 +896,13 @@ app.get("/api/passkit/loyalty/:id", async (req, res) => {
       `attachment; filename="smoke-n-bubbles-loyalty-${member.id}.pkpass"`
     );
     res.send(passBuffer);
-  } catch (_e) {
+  } catch (e) {
+    const reason = e && e.message ? String(e.message) : "Unknown signing error.";
+    console.error("Apple Wallet loyalty pass error:", reason);
     res.status(500).json({
       error:
-        "Could not generate Apple Wallet pass. Check certificates and Pass Type ID."
+        "Could not generate Apple Wallet pass. Check certificates and Pass Type ID.",
+      reason
     });
   }
 });
