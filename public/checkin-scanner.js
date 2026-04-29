@@ -5,10 +5,6 @@ const scannerSection = document.getElementById("scannerSection");
 const startScanBtn = document.getElementById("startScanBtn");
 const scanStatus = document.getElementById("scanStatus");
 const checkinResult = document.getElementById("checkinResult");
-const membersSection = document.getElementById("membersSection");
-const refreshMembersBtn = document.getElementById("refreshMembersBtn");
-const membersStatus = document.getElementById("membersStatus");
-const membersTbody = document.getElementById("membersTbody");
 const rName = document.getElementById("rName");
 const rPoints = document.getElementById("rPoints");
 const rMessage = document.getElementById("rMessage");
@@ -43,9 +39,8 @@ async function unlockAdmin() {
   }
   isAdminUnlocked = true;
   scannerSection.classList.remove("hidden");
-  membersSection.classList.remove("hidden");
   scanStatus.textContent = "Signed in. Tap Start scanner.";
-  await loadMembers();
+  sessionStorage.setItem("admin_password", adminPassword);
 }
 
 adminAccessForm.addEventListener("submit", async (event) => {
@@ -55,48 +50,6 @@ adminAccessForm.addEventListener("submit", async (event) => {
   } catch (e) {
     scanStatus.textContent = e.message || "Sign in failed.";
   }
-});
-
-async function loadMembers() {
-  if (!isAdminUnlocked) return;
-  const adminPassword = (adminPasswordInput?.value || "").trim();
-  membersStatus.textContent = "Loading customers...";
-  membersTbody.innerHTML = "";
-  try {
-    const response = await fetch("/api/admin/loyalty/members", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-password": adminPassword
-      },
-      body: JSON.stringify({ password: adminPassword })
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Could not load customers.");
-
-    const members = Array.isArray(data.members) ? data.members : [];
-    if (!members.length) {
-      membersStatus.textContent = "No customers found yet.";
-      return;
-    }
-
-    members.forEach((member) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td style="padding: 6px; border-top: 1px solid #e2e8f0">${member.name || ""}</td>
-        <td style="padding: 6px; border-top: 1px solid #e2e8f0">${member.phoneDisplay || member.phone || ""}</td>
-        <td style="padding: 6px; border-top: 1px solid #e2e8f0">${String(member.points ?? 0)}</td>
-      `;
-      membersTbody.appendChild(row);
-    });
-    membersStatus.textContent = `Loaded ${members.length} customer(s).`;
-  } catch (e) {
-    membersStatus.textContent = e.message || "Could not load customers.";
-  }
-}
-
-refreshMembersBtn.addEventListener("click", () => {
-  loadMembers();
 });
 
 function extractLoyaltyMemberId(decodedText) {
@@ -175,7 +128,6 @@ async function processMember(member) {
     }
     checkinResult.classList.remove("hidden");
     scanStatus.textContent = "Check-in complete.";
-    loadMembers();
   } catch (e) {
     const p = e.payload || {};
     rName.textContent = p.name || "—";

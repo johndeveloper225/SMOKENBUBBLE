@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
+    <title>Customers Back Office</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="top">
+        <h1>Customers Back Office</h1>
+        <p>Owner-only view of customer names, phones and points.</p>
+      </header>
+
+      <section class="card">
+        <form id="adminMembersAccessForm" class="form">
+          <label>
+            Admin password
+            <input
+              id="adminMembersPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter admin password"
+              required
+            />
+          </label>
+          <label class="small muted">
+            <input id="showMembersPassword" type="checkbox" />
+            Show password
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+        <p id="membersStatus" class="status-message"></p>
+      </section>
+
+      <section id="membersSection" class="card hidden">
+        <p>
+          <button type="button" id="refreshMembersBtn">Refresh list</button>
+        </p>
+        <div style="overflow-x: auto">
+          <table id="membersTable" style="width: 100%; border-collapse: collapse">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 6px">Name</th>
+                <th style="text-align: left; padding: 6px">Phone</th>
+                <th style="text-align: left; padding: 6px">Points</th>
+              </tr>
+            </thead>
+            <tbody id="membersTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <a href="/checkin-scanner.html" class="btn-link secondary">Back to scanner</a>
+    </main>
+
+    <script src="/admin-members.js"></script>
+  </body>
+</html>

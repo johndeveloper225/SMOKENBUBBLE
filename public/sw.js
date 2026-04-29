@@ -1,4 +1,4 @@
-const CACHE_NAME = "loyalty-wallet-v17";
+const CACHE_NAME = "loyalty-wallet-v18";
 const URLS_TO_CACHE = [
   "/",
   "/styles.css",
@@ -11,6 +11,8 @@ const URLS_TO_CACHE = [
   "/checkin-scanner.js",
   "/admin-card.html",
   "/admin-card.js",
+  "/admin-members.html",
+  "/admin-members.js",
   "/wallet-success.html",
   "/wallet-success.js",
   "/favicon.ico",
