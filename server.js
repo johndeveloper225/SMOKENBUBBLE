@@ -218,46 +218,44 @@ const iconPngBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAYAAACoYAD2AAAAKUlEQVR4nO3NAQ0AAAgDIN8/9K3hHFQgCjJpaoFAIBAIBAKBQCAQCAT+QwE+3QHf7N8h8QAAAABJRU5ErkJggg==";
 
 async function buildPkPass(user, baseUrl) {
-  const pass = await PKPass.from(
+  const pass = new PKPass(
     {
-      model: {
-        "pass.json": Buffer.from(
-          JSON.stringify({
-            formatVersion: 1,
-            passTypeIdentifier: APPLE_WALLET_CONFIG.passTypeIdentifier,
-            serialNumber: user.id,
-            teamIdentifier: APPLE_WALLET_CONFIG.teamIdentifier,
-            organizationName: APPLE_WALLET_CONFIG.organizationName,
-            description: "Digital membership pass",
-            logoText: "Digital Pass",
-            foregroundColor: "rgb(255,255,255)",
-            backgroundColor: "rgb(17,24,39)",
-            labelColor: "rgb(209,213,219)",
-            generic: {
-              primaryFields: [
-                {
-                  key: "memberName",
-                  label: "Member",
-                  value: user.name
-                }
-              ],
-              secondaryFields: [
-                {
-                  key: "memberId",
-                  label: "ID",
-                  value: user.memberId
-                }
-              ]
-            }
-          })
-        ),
-        "icon.png": makePngFromBase64(iconPngBase64),
-        "icon@2x.png": makePngFromBase64(iconPngBase64),
-        "logo.png": makePngFromBase64(iconPngBase64),
-        "logo@2x.png": makePngFromBase64(iconPngBase64)
-      },
-      certificates: getCertificates()
+      "pass.json": Buffer.from(
+        JSON.stringify({
+          formatVersion: 1,
+          passTypeIdentifier: APPLE_WALLET_CONFIG.passTypeIdentifier,
+          serialNumber: user.id,
+          teamIdentifier: APPLE_WALLET_CONFIG.teamIdentifier,
+          organizationName: APPLE_WALLET_CONFIG.organizationName,
+          description: "Digital membership pass",
+          logoText: "Digital Pass",
+          foregroundColor: "rgb(255,255,255)",
+          backgroundColor: "rgb(17,24,39)",
+          labelColor: "rgb(209,213,219)",
+          generic: {
+            primaryFields: [
+              {
+                key: "memberName",
+                label: "Member",
+                value: user.name
+              }
+            ],
+            secondaryFields: [
+              {
+                key: "memberId",
+                label: "ID",
+                value: user.memberId
+              }
+            ]
+          }
+        })
+      ),
+      "icon.png": makePngFromBase64(iconPngBase64),
+      "icon@2x.png": makePngFromBase64(iconPngBase64),
+      "logo.png": makePngFromBase64(iconPngBase64),
+      "logo@2x.png": makePngFromBase64(iconPngBase64)
     },
+    getCertificates(),
     {
       serialNumber: user.id,
       authenticationToken: `token-${user.id}`,
@@ -281,66 +279,64 @@ async function buildLoyaltyPkPass(member, baseUrl) {
   const orgName =
     process.env.APPLE_ORGANIZATION_NAME || "Smoke n Bubbles";
 
-  const pass = await PKPass.from(
+  const pass = new PKPass(
     {
-      model: {
-        "pass.json": Buffer.from(
-          JSON.stringify({
-            formatVersion: 1,
-            passTypeIdentifier: APPLE_WALLET_CONFIG.passTypeIdentifier,
-            serialNumber: member.id,
-            teamIdentifier: APPLE_WALLET_CONFIG.teamIdentifier,
-            organizationName: orgName,
-            description: "Smoke n Bubbles Loyalty",
-            logoText: "Smoke n Bubbles",
-            foregroundColor: "rgb(255,255,255)",
-            backgroundColor: "rgb(0,0,0)",
-            labelColor: "rgb(94, 234, 212)",
-            storeCard: {
-              headerFields: [],
-              primaryFields: [
-                {
-                  key: "points",
-                  label: "Points",
-                  value: `${member.points} / ${LOYALTY_POINTS_GOAL}`
-                }
-              ],
-              secondaryFields: [
-                {
-                  key: "name",
-                  label: "Member",
-                  value: member.name
-                }
-              ],
-              auxiliaryFields: [
-                {
-                  key: "phone",
-                  label: "Phone",
-                  value: formatPhoneDisplay(member.phone)
-                }
-              ],
-              backFields: [
-                {
-                  key: "rule",
-                  label: "How it works",
-                  value: LOYALTY_RULE_TEXT
-                },
-                {
-                  key: "reward",
-                  label: "Reward",
-                  value: LOYALTY_REWARD_TEXT
-                }
-              ]
-            }
-          })
-        ),
-        "icon.png": makePngFromBase64(iconPngBase64),
-        "icon@2x.png": makePngFromBase64(iconPngBase64),
-        "logo.png": makePngFromBase64(iconPngBase64),
-        "logo@2x.png": makePngFromBase64(iconPngBase64)
-      },
-      certificates: getCertificates()
+      "pass.json": Buffer.from(
+        JSON.stringify({
+          formatVersion: 1,
+          passTypeIdentifier: APPLE_WALLET_CONFIG.passTypeIdentifier,
+          serialNumber: member.id,
+          teamIdentifier: APPLE_WALLET_CONFIG.teamIdentifier,
+          organizationName: orgName,
+          description: "Smoke n Bubbles Loyalty",
+          logoText: "Smoke n Bubbles",
+          foregroundColor: "rgb(255,255,255)",
+          backgroundColor: "rgb(0,0,0)",
+          labelColor: "rgb(94, 234, 212)",
+          storeCard: {
+            headerFields: [],
+            primaryFields: [
+              {
+                key: "points",
+                label: "Points",
+                value: `${member.points} / ${LOYALTY_POINTS_GOAL}`
+              }
+            ],
+            secondaryFields: [
+              {
+                key: "name",
+                label: "Member",
+                value: member.name
+              }
+            ],
+            auxiliaryFields: [
+              {
+                key: "phone",
+                label: "Phone",
+                value: formatPhoneDisplay(member.phone)
+              }
+            ],
+            backFields: [
+              {
+                key: "rule",
+                label: "How it works",
+                value: LOYALTY_RULE_TEXT
+              },
+              {
+                key: "reward",
+                label: "Reward",
+                value: LOYALTY_REWARD_TEXT
+              }
+            ]
+          }
+        })
+      ),
+      "icon.png": makePngFromBase64(iconPngBase64),
+      "icon@2x.png": makePngFromBase64(iconPngBase64),
+      "logo.png": makePngFromBase64(iconPngBase64),
+      "logo@2x.png": makePngFromBase64(iconPngBase64)
     },
+    getCertificates(),
     {
       serialNumber: member.id,
       authenticationToken: `loy-${member.id}`,
