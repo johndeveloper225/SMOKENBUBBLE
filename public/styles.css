@@ -621,3 +621,14 @@ code {
 .owner-qr-actions .btn-link {
   margin-top: 0;
 }
+
+.admin-delete-btn {
+  white-space: nowrap;
+  min-width: 74px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+}
+
+.active-filter {
+  outline: 2px solid rgba(20, 184, 166, 0.45);
+}

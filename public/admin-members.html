@@ -35,8 +35,19 @@
             Delete selected
           </button>
         </p>
+        <p>
+          <button type="button" id="filterAllBtn" class="btn-link secondary" style="margin-top: 0">
+            All scans
+          </button>
+          <button type="button" id="filterTodayBtn" class="btn-link secondary" style="margin-top: 0">
+            Today
+          </button>
+          <button type="button" id="filterYesterdayBtn" class="btn-link secondary" style="margin-top: 0">
+            Yesterday
+          </button>
+        </p>
         <div style="overflow-x: auto">
-          <table id="membersTable" style="width: 100%; border-collapse: collapse">
+          <table id="membersTable" style="min-width: 980px; width: max-content; border-collapse: collapse">
             <thead>
               <tr>
                 <th style="text-align: left; padding: 6px">
@@ -45,7 +56,9 @@
                 <th style="text-align: left; padding: 6px">Name</th>
                 <th style="text-align: left; padding: 6px">Phone</th>
                 <th style="text-align: left; padding: 6px">Points</th>
-                <th style="text-align: left; padding: 6px">Action</th>
+                <th style="text-align: left; padding: 6px">Last scan date</th>
+                <th style="text-align: left; padding: 6px">Last scan time</th>
+                <th style="text-align: left; padding: 6px; min-width: 110px">Action</th>
               </tr>
             </thead>
             <tbody id="membersTbody"></tbody>
@@ -57,6 +70,6 @@
       <a href="/owner.html" class="btn-link secondary">Back</a>
     </main>
 
-    <script src="/admin-members.js?v=27"></script>
+    <script src="/admin-members.js?v=28"></script>
   </body>
 </html>

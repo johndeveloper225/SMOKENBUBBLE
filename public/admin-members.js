@@ -3,10 +3,14 @@ const membersSection = document.getElementById("membersSection");
 const refreshBtn = document.getElementById("refreshMembersBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 const selectAllMembers = document.getElementById("selectAllMembers");
+const filterAllBtn = document.getElementById("filterAllBtn");
+const filterTodayBtn = document.getElementById("filterTodayBtn");
+const filterYesterdayBtn = document.getElementById("filterYesterdayBtn");
 const membersTbody = document.getElementById("membersTbody");
 const themeToggleBtn = document.getElementById("themeToggleBtn");
 
 const THEME_KEY = "owner_theme";
+let activeFilter = "all";
 
 function getAdminPassword() {
   return (sessionStorage.getItem("admin_password") || "").trim();
@@ -19,6 +23,50 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function getTodayLocalDate() {
+  return new Date().toLocaleDateString("en-CA");
+}
+
+function getYesterdayLocalDate() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toLocaleDateString("en-CA");
+}
+
+function formatCheckinDate(value) {
+  if (!value) return "-";
+  const dt = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(dt.getTime())) return value;
+  return dt.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit"
+  });
+}
+
+function formatCheckinTime(_value) {
+  // Existing records store date-only check-ins. Time can be added later if persisted server-side.
+  return "--";
+}
+
+function passesFilter(member) {
+  const date = String(member.lastCheckinDate || "");
+  if (activeFilter === "today") return date === getTodayLocalDate();
+  if (activeFilter === "yesterday") return date === getYesterdayLocalDate();
+  return true;
+}
+
+function setFilterButtonStates() {
+  const map = {
+    all: filterAllBtn,
+    today: filterTodayBtn,
+    yesterday: filterYesterdayBtn
+  };
+  Object.entries(map).forEach(([key, btn]) => {
+    btn.classList.toggle("active-filter", key === activeFilter);
+  });
 }
 
 function applyTheme(theme) {
@@ -87,9 +135,15 @@ async function loadMembers() {
   }
   if (!response.ok) throw new Error(data.error || "Could not load customers.");
 
-  const members = Array.isArray(data.members) ? data.members : [];
+  const members = (Array.isArray(data.members) ? data.members : []).filter(passesFilter);
   if (!members.length) {
-    statusEl.textContent = "No customers found yet.";
+    if (activeFilter === "today") {
+      statusEl.textContent = "No customers scanned today yet.";
+    } else if (activeFilter === "yesterday") {
+      statusEl.textContent = "No customers scanned yesterday.";
+    } else {
+      statusEl.textContent = "No customers found yet.";
+    }
     return;
   }
 
@@ -107,12 +161,14 @@ async function loadMembers() {
       <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(member.name || "")}</td>
       <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(member.phoneDisplay || member.phone || "")}</td>
       <td style="padding: 6px; border-top: 1px solid #e2e8f0">${String(member.points ?? 0)}</td>
+      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(formatCheckinDate(member.lastCheckinDate))}</td>
+      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(formatCheckinTime(member.lastCheckinDate))}</td>
       <td style="padding: 6px; border-top: 1px solid #e2e8f0">
         <button
           type="button"
-          class="btn-link secondary delete-member-btn"
+          class="btn-link secondary delete-member-btn admin-delete-btn"
           data-member-id="${escapeHtml(member.id)}"
-          style="margin-top: 0; padding: 6px 10px"
+          style="margin-top: 0"
         >
           Delete
         </button>
@@ -200,6 +256,24 @@ selectAllMembers.addEventListener("change", () => {
   updateBulkDeleteState();
 });
 
+filterAllBtn.addEventListener("click", async () => {
+  activeFilter = "all";
+  setFilterButtonStates();
+  await loadMembers();
+});
+
+filterTodayBtn.addEventListener("click", async () => {
+  activeFilter = "today";
+  setFilterButtonStates();
+  await loadMembers();
+});
+
+filterYesterdayBtn.addEventListener("click", async () => {
+  activeFilter = "yesterday";
+  setFilterButtonStates();
+  await loadMembers();
+});
+
 deleteSelectedBtn.addEventListener("click", async () => {
   const ids = getSelectedMemberIds().filter(Boolean);
   if (!ids.length) return;
@@ -253,4 +327,5 @@ async function init() {
 
 applyTheme(localStorage.getItem(THEME_KEY) || "light");
 deleteSelectedBtn.disabled = true;
+setFilterButtonStates();
 init();
