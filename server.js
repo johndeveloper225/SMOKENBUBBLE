@@ -229,8 +229,22 @@ function makePngFromBase64(base64) {
 
 const iconPngBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAYAAACoYAD2AAAAKUlEQVR4nO3NAQ0AAAgDIN8/9K3hHFQgCjJpaoFAIBAIBAKBQCAQCAT+QwE+3QHf7N8h8QAAAABJRU5ErkJggg==";
+const fallbackIconPng = makePngFromBase64(iconPngBase64);
+
+function getWalletLogoPng() {
+  const logoPath = path.join(__dirname, "public", "wallet-logo.png");
+  try {
+    if (fs.existsSync(logoPath)) {
+      return fs.readFileSync(logoPath);
+    }
+  } catch (_e) {
+    // Fall back to inline default icon if logo file cannot be read.
+  }
+  return fallbackIconPng;
+}
 
 async function buildPkPass(user, baseUrl) {
+  const logoPng = getWalletLogoPng();
   const pass = new PKPass(
     {
       "pass.json": Buffer.from(
@@ -242,9 +256,9 @@ async function buildPkPass(user, baseUrl) {
           organizationName: APPLE_WALLET_CONFIG.organizationName,
           description: "Digital membership pass",
           logoText: "Digital Pass",
-          foregroundColor: "rgb(255,255,255)",
-          backgroundColor: "rgb(17,24,39)",
-          labelColor: "rgb(209,213,219)",
+          foregroundColor: "rgb(17,24,39)",
+          backgroundColor: "rgb(255,255,255)",
+          labelColor: "rgb(71,85,105)",
           generic: {
             primaryFields: [
               {
@@ -263,10 +277,10 @@ async function buildPkPass(user, baseUrl) {
           }
         })
       ),
-      "icon.png": makePngFromBase64(iconPngBase64),
-      "icon@2x.png": makePngFromBase64(iconPngBase64),
-      "logo.png": makePngFromBase64(iconPngBase64),
-      "logo@2x.png": makePngFromBase64(iconPngBase64)
+      "icon.png": logoPng,
+      "icon@2x.png": logoPng,
+      "logo.png": logoPng,
+      "logo@2x.png": logoPng
     },
     getCertificates(),
     {
@@ -291,6 +305,7 @@ async function buildLoyaltyPkPass(member, baseUrl) {
   const cardUrl = `${baseUrl}/loyalty/card/${member.id}`;
   const orgName =
     process.env.APPLE_ORGANIZATION_NAME || "Smoke n Bubbles";
+  const logoPng = getWalletLogoPng();
 
   const pass = new PKPass(
     {
@@ -303,9 +318,9 @@ async function buildLoyaltyPkPass(member, baseUrl) {
           organizationName: orgName,
           description: "Smoke n Bubbles Loyalty",
           logoText: "Smoke n Bubbles",
-          foregroundColor: "rgb(255,255,255)",
-          backgroundColor: "rgb(0,0,0)",
-          labelColor: "rgb(94, 234, 212)",
+          foregroundColor: "rgb(17,24,39)",
+          backgroundColor: "rgb(255,255,255)",
+          labelColor: "rgb(71,85,105)",
           storeCard: {
             headerFields: [],
             primaryFields: [
@@ -344,10 +359,10 @@ async function buildLoyaltyPkPass(member, baseUrl) {
           }
         })
       ),
-      "icon.png": makePngFromBase64(iconPngBase64),
-      "icon@2x.png": makePngFromBase64(iconPngBase64),
-      "logo.png": makePngFromBase64(iconPngBase64),
-      "logo@2x.png": makePngFromBase64(iconPngBase64)
+      "icon.png": logoPng,
+      "icon@2x.png": logoPng,
+      "logo.png": logoPng,
+      "logo@2x.png": logoPng
     },
     getCertificates(),
     {
@@ -500,6 +515,26 @@ function createLoyaltyMember(id, phone, name, createdAt) {
           last_checkin_date: null,
           createdAt
         });
+      }
+    );
+  });
+}
+
+function deleteLoyaltyMemberById(memberId) {
+  if (USE_SUPABASE) {
+    return supabaseRequest(
+      "DELETE",
+      `loyalty_members?id=eq.${encodeURIComponent(memberId)}`,
+      { prefer: "return=representation" }
+    ).then((rows) => rows?.[0] || null);
+  }
+  return new Promise((resolve, reject) => {
+    db.run(
+      "DELETE FROM loyalty_members WHERE id = ?",
+      [memberId],
+      function (err) {
+        if (err) return reject(err);
+        resolve(this.changes > 0);
       }
     );
   });
@@ -921,6 +956,38 @@ app.post("/api/admin/loyalty/members", async (req, res) => {
     });
   } catch (_err) {
     return res.status(500).json({ error: "Could not load members." });
+  }
+});
+
+app.delete("/api/admin/loyalty/member/:id", async (req, res) => {
+  if (!ADMIN_CARD_PASSWORD) {
+    return res.status(503).json({
+      error: "Admin card password is not configured."
+    });
+  }
+  if (!isAdminPasswordValid(readAdminPassword(req))) {
+    return res.status(401).json({ error: "Invalid admin password." });
+  }
+
+  const { id } = req.params;
+  if (!id || !String(id).trim()) {
+    return res.status(400).json({ error: "Member id is required." });
+  }
+
+  try {
+    const existing = await getLoyaltyMemberById(id);
+    if (!existing) {
+      return res.status(404).json({ error: "Member not found." });
+    }
+
+    const deleted = await deleteLoyaltyMemberById(id);
+    if (!deleted) {
+      return res.status(500).json({ error: "Could not delete member." });
+    }
+
+    return res.json({ ok: true, id });
+  } catch (_err) {
+    return res.status(500).json({ error: "Could not delete member." });
   }
 });
 

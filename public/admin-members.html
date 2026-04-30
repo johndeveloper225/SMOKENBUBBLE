@@ -9,7 +9,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
     <title>Customers Back Office</title>
-    <link rel="stylesheet" href="/styles.css?v=25" />
+    <link rel="stylesheet" href="/styles.css?v=27" />
   </head>
   <body>
     <button type="button" id="themeToggleBtn" class="owner-qr-theme-toggle">
@@ -31,14 +31,21 @@
         <h2>Customers</h2>
         <p>
           <button type="button" id="refreshMembersBtn">Refresh list</button>
+          <button type="button" id="deleteSelectedBtn" class="btn-link secondary" style="margin-top: 0">
+            Delete selected
+          </button>
         </p>
         <div style="overflow-x: auto">
           <table id="membersTable" style="width: 100%; border-collapse: collapse">
             <thead>
               <tr>
+                <th style="text-align: left; padding: 6px">
+                  <input id="selectAllMembers" type="checkbox" aria-label="Select all customers" />
+                </th>
                 <th style="text-align: left; padding: 6px">Name</th>
                 <th style="text-align: left; padding: 6px">Phone</th>
                 <th style="text-align: left; padding: 6px">Points</th>
+                <th style="text-align: left; padding: 6px">Action</th>
               </tr>
             </thead>
             <tbody id="membersTbody"></tbody>
@@ -50,6 +57,6 @@
       <a href="/owner.html" class="btn-link secondary">Back</a>
     </main>
 
-    <script src="/admin-members.js?v=25"></script>
+    <script src="/admin-members.js?v=27"></script>
   </body>
 </html>
