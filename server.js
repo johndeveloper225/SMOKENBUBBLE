@@ -318,9 +318,9 @@ async function buildLoyaltyPkPass(member, baseUrl) {
           organizationName: orgName,
           description: "Smoke n Bubbles Loyalty",
           logoText: "Smoke n Bubbles",
-          foregroundColor: "rgb(17,24,39)",
-          backgroundColor: "rgb(255,255,255)",
-          labelColor: "rgb(71,85,105)",
+          foregroundColor: "rgb(255,255,255)",
+          backgroundColor: "rgb(6,17,40)",
+          labelColor: "rgb(147,197,253)",
           storeCard: {
             headerFields: [],
             primaryFields: [
@@ -781,6 +781,7 @@ app.post("/api/loyalty/auto-checkin", async (req, res) => {
 
     const baseUrl = resolveBaseUrl(req);
     let member = await getLoyaltyMemberByPhone(normalized);
+    const returning = Boolean(member);
     if (!member) {
       const id = generateLoyaltyId();
       member = await createLoyaltyMember(
@@ -789,17 +790,6 @@ app.post("/api/loyalty/auto-checkin", async (req, res) => {
         cleanName,
         new Date().toISOString()
       );
-    }
-
-    const today = localCalendarDate();
-    if (member.last_checkin_date !== today) {
-      const checkin = await addDailyCheckinPoint(member.id, today);
-      if (checkin.status === "ok" && checkin.member) {
-        member = checkin.member;
-      } else {
-        const updated = await getLoyaltyMemberById(member.id);
-        if (updated) member = updated;
-      }
     }
 
     const cardUrl = buildLoyaltyCardUrl(baseUrl, member);
@@ -813,8 +803,8 @@ app.post("/api/loyalty/auto-checkin", async (req, res) => {
       lastCheckinDate: member.last_checkin_date,
       cardUrl,
       qrDataUrl,
-      returning: true,
-      autoCheckedIn: true,
+      returning,
+      autoCheckedIn: false,
       appleWalletLoyaltyUrl: buildLoyaltyPasskitUrl(baseUrl, member),
       appleWalletEnabled: isAppleWalletConfigured(),
       ...loyaltyMetaPayload()

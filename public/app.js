@@ -3,12 +3,12 @@ const form = document.getElementById("loyaltyForm");
 function buildPointsCongrats(points, goal) {
   const safePoints = Number.isFinite(Number(points)) ? Number(points) : 0;
   const safeGoal = Number.isFinite(Number(goal)) && Number(goal) > 0 ? Number(goal) : 10;
-  if (safePoints <= 0) return "Start today: your card is ready at 0/10.";
+  if (safePoints <= 0) return "Card ready. Points are added only at checkout by staff.";
   if (safePoints >= safeGoal) {
     return `Congratulations! You reached ${safePoints}/${safeGoal} and unlocked your reward.`;
   }
-  if (safePoints === 1) return "Congratulations! You earned your first point today: 1/10.";
-  return `Great job! You now have ${safePoints}/${safeGoal}. Keep going to reach your reward.`;
+  if (safePoints === 1) return "You have 1 point.";
+  return `You currently have ${safePoints}/${safeGoal} points.`;
 }
 
 if (form) {
@@ -30,7 +30,7 @@ if (form) {
     if (!phone || !name) return;
 
     try {
-      const response = await fetch("/api/loyalty/auto-checkin", {
+      const response = await fetch("/api/loyalty/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, name })

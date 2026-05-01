@@ -232,15 +232,15 @@ code {
 
 /* —— Smoke n Bubbles loyalty card (web wallet look) —— */
 :root {
-  --snb-teal: #2dd4bf;
-  --snb-teal-dim: #14b8a6;
-  --snb-black: #000000;
+  --snb-teal: #60a5fa;
+  --snb-teal-dim: #2563eb;
+  --snb-black: #020617;
 }
 
 .snb-page {
   margin: 0;
   min-height: 100dvh;
-  background: radial-gradient(ellipse 120% 80% at 50% 0%, #1a1a1a 0%, #000 55%);
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #0f172a 0%, #020617 55%);
   color: #fff;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
 }
@@ -255,8 +255,8 @@ code {
   position: relative;
   overflow: hidden;
   border-radius: 0;
-  background: var(--snb-black);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+  background: linear-gradient(160deg, #020617 0%, #0b1f4a 55%, #0f172a 100%);
+  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.6);
   padding: 14px 12px 14px;
   text-align: center;
 }
@@ -267,9 +267,9 @@ code {
   pointer-events: none;
   opacity: 0.35;
   background:
-    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(45, 212, 191, 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(96, 165, 250, 0.16), transparent 50%),
     radial-gradient(ellipse 70% 45% at 85% 60%, rgba(255, 255, 255, 0.06), transparent 45%),
-    radial-gradient(ellipse 60% 40% at 50% 80%, rgba(45, 212, 191, 0.08), transparent 50%);
+    radial-gradient(ellipse 60% 40% at 50% 80%, rgba(37, 99, 235, 0.12), transparent 50%);
 }
 
 .snb-brand {
