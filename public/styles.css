@@ -632,3 +632,31 @@ code {
 .active-filter {
   outline: 2px solid rgba(20, 184, 166, 0.45);
 }
+
+/* Customers back office header logo */
+.admin-members-brand {
+  text-align: center;
+}
+
+.admin-members-logo-wrap {
+  margin: 0 auto 12px;
+  max-width: 220px;
+}
+
+.admin-members-logo {
+  display: block;
+  width: 100%;
+  max-height: 88px;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme="dark"] .admin-members-logo {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
