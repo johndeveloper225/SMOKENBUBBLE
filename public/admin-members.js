@@ -150,7 +150,7 @@ async function loadMembers() {
   members.forEach((member) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">
+      <td class="admin-members-cell" style="padding: 6px">
         <input
           type="checkbox"
           class="member-select"
@@ -158,17 +158,16 @@ async function loadMembers() {
           aria-label="Select customer ${escapeHtml(member.name || member.phoneDisplay || member.phone || member.id)}"
         />
       </td>
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(member.name || "")}</td>
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(member.phoneDisplay || member.phone || "")}</td>
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${String(member.points ?? 0)}</td>
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(formatCheckinDate(member.lastCheckinDate))}</td>
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">${escapeHtml(formatCheckinTime(member.lastCheckinDate))}</td>
-      <td style="padding: 6px; border-top: 1px solid #e2e8f0">
+      <td class="admin-members-cell" style="padding: 6px">${escapeHtml(member.name || "")}</td>
+      <td class="admin-members-cell" style="padding: 6px">${escapeHtml(member.phoneDisplay || member.phone || "")}</td>
+      <td class="admin-members-cell" style="padding: 6px">${String(member.points ?? 0)}</td>
+      <td class="admin-members-cell" style="padding: 6px">${escapeHtml(formatCheckinDate(member.lastCheckinDate))}</td>
+      <td class="admin-members-cell" style="padding: 6px">${escapeHtml(formatCheckinTime(member.lastCheckinDate))}</td>
+      <td class="admin-members-cell" style="padding: 6px">
         <button
           type="button"
           class="btn-link secondary delete-member-btn admin-delete-btn"
           data-member-id="${escapeHtml(member.id)}"
-          style="margin-top: 0"
         >
           Delete
         </button>

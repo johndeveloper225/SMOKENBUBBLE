@@ -9,14 +9,14 @@
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
     <title>Customers Back Office</title>
-    <link rel="stylesheet" href="/styles.css?v=28" />
+    <link rel="stylesheet" href="/styles.css?v=29" />
   </head>
-  <body>
+  <body class="admin-members-page">
     <button type="button" id="themeToggleBtn" class="owner-qr-theme-toggle">
       Theme
     </button>
 
-    <main class="container snb-page-padded">
+    <main class="container snb-page-padded admin-members-shell">
       <header class="top admin-members-brand">
         <div class="admin-members-logo-wrap">
           <img
@@ -36,27 +36,27 @@
 
       <p id="membersStatus" class="status-message" aria-live="polite"></p>
 
-      <section id="membersSection" class="card hidden">
+      <section id="membersSection" class="card admin-members-card hidden">
         <h2>Customers</h2>
-        <p>
+        <p class="admin-members-actions">
           <button type="button" id="refreshMembersBtn">Refresh list</button>
-          <button type="button" id="deleteSelectedBtn" class="btn-link secondary" style="margin-top: 0">
+          <button type="button" id="deleteSelectedBtn" class="btn-link secondary">
             Delete selected
           </button>
         </p>
-        <p>
-          <button type="button" id="filterAllBtn" class="btn-link secondary" style="margin-top: 0">
+        <p class="admin-members-actions">
+          <button type="button" id="filterAllBtn" class="btn-link secondary">
             All scans
           </button>
-          <button type="button" id="filterTodayBtn" class="btn-link secondary" style="margin-top: 0">
+          <button type="button" id="filterTodayBtn" class="btn-link secondary">
             Today
           </button>
-          <button type="button" id="filterYesterdayBtn" class="btn-link secondary" style="margin-top: 0">
+          <button type="button" id="filterYesterdayBtn" class="btn-link secondary">
             Yesterday
           </button>
         </p>
-        <div style="overflow-x: auto">
-          <table id="membersTable" style="min-width: 980px; width: max-content; border-collapse: collapse">
+        <div class="admin-members-table-wrap">
+          <table id="membersTable" class="admin-members-table">
             <thead>
               <tr>
                 <th style="text-align: left; padding: 6px">
@@ -79,6 +79,6 @@
       <a href="/owner.html" class="btn-link secondary">Back</a>
     </main>
 
-    <script src="/admin-members.js?v=29"></script>
+    <script src="/admin-members.js?v=30"></script>
   </body>
 </html>

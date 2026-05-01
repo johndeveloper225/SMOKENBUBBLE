@@ -660,3 +660,94 @@ code {
   background: rgba(255, 255, 255, 0.97);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
 }
+
+/* Customers back office blue/black restyle */
+.admin-members-page {
+  background:
+    radial-gradient(ellipse 130% 95% at 50% 0%, #132a5f 0%, #0b1733 40%, #020617 85%),
+    #020617;
+}
+
+.admin-members-shell {
+  color: #e2e8f0;
+}
+
+.admin-members-shell .top p {
+  color: #bfdbfe;
+}
+
+.admin-members-shell .top a {
+  color: #93c5fd;
+}
+
+.admin-members-shell .status-message {
+  color: #93c5fd;
+}
+
+.admin-members-card {
+  background: linear-gradient(155deg, rgba(6, 17, 40, 0.92), rgba(11, 31, 74, 0.9));
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.52);
+}
+
+.admin-members-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.admin-members-actions .btn-link,
+.admin-members-actions button {
+  margin-top: 0;
+  background: #1e3a8a;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.admin-members-actions .btn-link.secondary {
+  background: #1e293b;
+}
+
+.admin-members-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.admin-members-table {
+  min-width: 980px;
+  width: max-content;
+  border-collapse: collapse;
+}
+
+.admin-members-table th,
+.admin-members-table td {
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.admin-members-table th {
+  color: #bfdbfe;
+}
+
+.admin-members-table td {
+  color: #e2e8f0;
+}
+
+.admin-members-table input[type="checkbox"] {
+  accent-color: #60a5fa;
+}
+
+.admin-members-shell .admin-delete-btn {
+  background: #334155;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.admin-members-shell .btn-link.secondary {
+  background: #334155;
+}
+
+.admin-members-shell .active-filter {
+  outline: 2px solid rgba(96, 165, 250, 0.6);
+  box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.3) inset;
+}
