@@ -928,6 +928,10 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
   }
 });
 
+app.get("/api/public/loyalty-meta", (_req, res) => {
+  res.json(loyaltyMetaPayload());
+});
+
 app.get("/api/public/join-qr", async (req, res) => {
   try {
     const baseUrl = resolveBaseUrl(req);

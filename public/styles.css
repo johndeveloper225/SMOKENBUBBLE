@@ -661,6 +661,73 @@ code {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
 }
 
+/* Store QR page — match customer loyalty card (teal on black) */
+.owner-qr-store {
+  --snb-teal: #2dd4bf;
+  --snb-teal-dim: #14b8a6;
+}
+
+.owner-qr-store-wrap {
+  max-width: 340px;
+  padding-bottom: 28px;
+}
+
+.owner-qr-store-card {
+  border-radius: 18px;
+  overflow: hidden;
+  padding-bottom: 16px;
+}
+
+.owner-qr-scan-copy {
+  margin: 0 0 12px;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.owner-qr-join-wrap {
+  max-width: 220px;
+  margin-top: 4px;
+}
+
+.owner-qr-load-status {
+  min-height: 20px;
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.owner-qr-link-row {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.owner-qr-join-link {
+  color: var(--snb-teal);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.owner-qr-join-link:hover {
+  text-decoration: underline;
+}
+
+.owner-qr-actions-panel {
+  text-align: center;
+  padding-bottom: 18px;
+}
+
+.owner-qr-action-primary {
+  margin: 0 auto 10px;
+}
+
+.owner-qr-action-secondary {
+  margin: 0 auto;
+  background: transparent;
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  box-shadow: none;
+}
+
 /* Customers back office blue/black restyle */
 .admin-members-page {
   background:
