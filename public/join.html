@@ -9,16 +9,16 @@
     <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
     <title>Join Smoke n Bubbles Loyalty</title>
     <link rel="manifest" href="/manifest.json" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=30" />
   </head>
   <body>
     <main class="container">
       <header class="top">
         <h1>Join Loyalty</h1>
-        <p>After scanning, enter your details to get your card.</p>
+        <p id="joinIntro">After scanning the store QR, enter your details once to get your card.</p>
       </header>
 
-      <section class="card">
+      <section id="joinFormSection" class="card">
         <form id="loyaltyForm" class="form">
           <label>
             Phone number
@@ -51,8 +51,17 @@
           </p>
         </div>
       </section>
+
+      <section id="joinBlocked" class="card hidden">
+        <h2 class="h-inline">Scan the store QR</h2>
+        <p class="muted">
+          This checkout page opens only right after you scan our join code. After you check out, it
+          locks until you scan again.
+        </p>
+        <p class="small muted">Ask staff for the store QR, or open the link from your last scan.</p>
+      </section>
     </main>
 
-    <script src="/app.js"></script>
+    <script src="/app.js?v=30"></script>
   </body>
 </html>

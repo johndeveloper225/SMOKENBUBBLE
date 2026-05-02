@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
 const sqlite3 = require("sqlite3").verbose();
@@ -46,6 +47,82 @@ const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim();
 const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 const ADMIN_CARD_PASSWORD = (process.env.ADMIN_CARD_PASSWORD || "").trim();
+
+function joinGateSecret() {
+  return (
+    String(process.env.JOIN_GATE_SECRET || "").trim() ||
+    ADMIN_CARD_PASSWORD ||
+    "local-dev-loyalty-join-gate-secret"
+  );
+}
+
+function signJoinGateToken() {
+  const exp = Date.now() + 15 * 60 * 1000;
+  const payload = Buffer.from(JSON.stringify({ exp, v: 1 }), "utf8").toString(
+    "base64url"
+  );
+  const sig = crypto
+    .createHmac("sha256", joinGateSecret())
+    .update(payload)
+    .digest("base64url");
+  return `${payload}.${sig}`;
+}
+
+function verifyJoinGateToken(raw) {
+  if (!raw || typeof raw !== "string") return false;
+  const idx = raw.lastIndexOf(".");
+  if (idx <= 0) return false;
+  const payload = raw.slice(0, idx);
+  const sig = raw.slice(idx + 1);
+  const expected = crypto
+    .createHmac("sha256", joinGateSecret())
+    .update(payload)
+    .digest("base64url");
+  try {
+    const sigBuf = Buffer.from(sig, "utf8");
+    const expBuf = Buffer.from(expected, "utf8");
+    if (sigBuf.length !== expBuf.length) return false;
+    if (!crypto.timingSafeEqual(sigBuf, expBuf)) return false;
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!data.exp || Date.now() > data.exp) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function parseCookies(req) {
+  const out = {};
+  const raw = req.headers.cookie;
+  if (!raw || typeof raw !== "string") return out;
+  for (const part of raw.split(";")) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+    const k = trimmed.slice(0, eq).trim();
+    const v = trimmed.slice(eq + 1).trim();
+    try {
+      out[k] = decodeURIComponent(v);
+    } catch {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+function readJoinGateCookie(req) {
+  return parseCookies(req).loyalty_join_gate || "";
+}
+
+function joinGateCookieOptions() {
+  const secure = Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+  return { path: "/", httpOnly: true, sameSite: "lax", secure };
+}
+
+function clearJoinGateCookie(res) {
+  res.clearCookie("loyalty_join_gate", joinGateCookieOptions());
+}
 
 const APPLE_WALLET_CONFIG = {
   passTypeIdentifier: process.env.APPLE_PASS_TYPE_IDENTIFIER,
@@ -693,6 +770,12 @@ app.get("/api/passkit/:id", async (req, res) => {
 
 app.post("/api/loyalty/register", async (req, res) => {
   try {
+    if (!verifyJoinGateToken(readJoinGateCookie(req))) {
+      return res.status(403).json({
+        error: "Please scan the store QR again to open checkout."
+      });
+    }
+
     const { phone, name } = req.body;
     const normalized = normalizePhone(phone);
     if (!name || !String(name).trim()) {
@@ -710,6 +793,7 @@ app.post("/api/loyalty/register", async (req, res) => {
     if (existing) {
       const cardUrl = buildLoyaltyCardUrl(baseUrl, existing);
       const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
+      clearJoinGateCookie(res);
       return res.json({
         id: existing.id,
         phone: existing.phone,
@@ -746,6 +830,7 @@ app.post("/api/loyalty/register", async (req, res) => {
     const cardUrl = buildLoyaltyCardUrl(baseUrl, created);
     const qrDataUrl = await QRCode.toDataURL(cardUrl, { width: 320, margin: 2 });
 
+    clearJoinGateCookie(res);
     res.status(201).json({
       id,
       phone: created.phone,
@@ -846,12 +931,31 @@ app.get("/api/loyalty/member/:id", async (req, res) => {
 app.get("/api/public/join-qr", async (req, res) => {
   try {
     const baseUrl = resolveBaseUrl(req);
-    const joinUrl = `${baseUrl}/join.html`;
+    const joinUrl = `${baseUrl}/join/start`;
     const qrDataUrl = await QRCode.toDataURL(joinUrl, { width: 320, margin: 2 });
     res.json({ joinUrl, qrDataUrl });
   } catch (_err) {
     res.status(500).json({ error: "Could not generate join QR." });
   }
+});
+
+app.get("/join/start", (req, res) => {
+  const token = signJoinGateToken();
+  res.cookie("loyalty_join_gate", token, {
+    ...joinGateCookieOptions(),
+    maxAge: 15 * 60 * 1000
+  });
+  res.redirect(302, "/join.html");
+});
+
+app.get("/api/public/join-verify", (req, res) => {
+  if (verifyJoinGateToken(readJoinGateCookie(req))) {
+    return res.json({ ok: true });
+  }
+  return res.status(403).json({
+    ok: false,
+    error: "Scan the store QR to open this page."
+  });
 });
 
 app.post("/api/admin/loyalty/member/:id", async (req, res) => {

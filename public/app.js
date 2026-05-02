@@ -11,6 +11,21 @@ function buildPointsCongrats(points, goal) {
   return `You currently have ${safePoints}/${safeGoal} points.`;
 }
 
+async function ensureJoinGate() {
+  const formSection = document.getElementById("joinFormSection");
+  const blocked = document.getElementById("joinBlocked");
+  const intro = document.getElementById("joinIntro");
+  if (!formSection) return true;
+
+  const response = await fetch("/api/public/join-verify", { credentials: "include" });
+  if (response.ok) return true;
+
+  formSection.classList.add("hidden");
+  if (blocked) blocked.classList.remove("hidden");
+  if (intro) intro.classList.add("hidden");
+  return false;
+}
+
 if (form) {
   const submitBtn = form.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.textContent = "Check out";
@@ -21,55 +36,59 @@ if (form) {
   const welcomeBack = document.getElementById("welcomeBack");
   const pointsCongrats = document.getElementById("pointsCongrats");
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  ensureJoinGate().then((allowed) => {
+    if (!allowed) return;
 
-    const phone = document.getElementById("phone").value.trim();
-    const name = document.getElementById("name").value.trim();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-    if (!phone || !name) return;
+      const phone = document.getElementById("phone").value.trim();
+      const name = document.getElementById("name").value.trim();
 
-    try {
-      const response = await fetch("/api/loyalty/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, name })
-      });
+      if (!phone || !name) return;
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || "Could not register.");
+      try {
+        const response = await fetch("/api/loyalty/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ phone, name })
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || "Could not register.");
+        }
+
+        const data = await response.json();
+
+        if (qrImage && data.qrDataUrl) qrImage.src = data.qrDataUrl;
+        openCard.href = data.cardUrl;
+        const goal = Number(data.pointsGoal) > 0 ? Number(data.pointsGoal) : 10;
+        resultPoints.textContent = `${data.points ?? 0} / ${goal}`;
+        if (pointsCongrats) {
+          pointsCongrats.textContent = buildPointsCongrats(Number(data.points ?? 0), goal);
+        }
+
+        if (data.returning) {
+          welcomeBack.textContent =
+            "Welcome back — same phone, your points are below.";
+          welcomeBack.classList.remove("hidden");
+        } else {
+          welcomeBack.classList.add("hidden");
+        }
+
+        result.classList.remove("hidden");
+        const fallbackCardUrl = `/loyalty/card/${encodeURIComponent(
+          data.id || ""
+        )}?phone=${encodeURIComponent(data.phone || phone)}&name=${encodeURIComponent(
+          data.name || name
+        )}&points=${encodeURIComponent(String(data.points ?? 0))}`;
+        window.location.replace(data.cardUrl || fallbackCardUrl);
+      } catch (error) {
+        alert(error.message);
       }
-
-      const data = await response.json();
-
-      if (qrImage && data.qrDataUrl) qrImage.src = data.qrDataUrl;
-      openCard.href = data.cardUrl;
-      const goal = Number(data.pointsGoal) > 0 ? Number(data.pointsGoal) : 10;
-      resultPoints.textContent = `${data.points ?? 0} / ${goal}`;
-      if (pointsCongrats) {
-        pointsCongrats.textContent = buildPointsCongrats(Number(data.points ?? 0), goal);
-      }
-
-      if (data.returning) {
-        welcomeBack.textContent =
-          "Welcome back — same phone, your points are below.";
-        welcomeBack.classList.remove("hidden");
-      } else {
-        welcomeBack.classList.add("hidden");
-      }
-
-      result.classList.remove("hidden");
-      // Checkout should open the digital card immediately.
-      const fallbackCardUrl = `/loyalty/card/${encodeURIComponent(
-        data.id || ""
-      )}?phone=${encodeURIComponent(data.phone || phone)}&name=${encodeURIComponent(
-        data.name || name
-      )}&points=${encodeURIComponent(String(data.points ?? 0))}`;
-      window.location.replace(data.cardUrl || fallbackCardUrl);
-    } catch (error) {
-      alert(error.message);
-    }
+    });
   });
 }
 
