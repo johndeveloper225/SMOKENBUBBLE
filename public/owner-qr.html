@@ -9,7 +9,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2" />
     <link rel="apple-touch-icon" href="/wallet-logo.png?v=2" />
     <title>Store scan code — Smoke n Bubbles</title>
-    <link rel="stylesheet" href="/styles.css?v=33" />
+    <link rel="stylesheet" href="/styles.css?v=34" />
   </head>
   <body class="snb-page owner-qr-store">
     <main class="snb-wrap owner-qr-store-wrap">
@@ -52,6 +52,18 @@
         </p>
       </article>
 
+      <article class="snb-card owner-qr-store-card owner-qr-scan-card" aria-label="Customer loyalty scanner">
+        <h2 class="owner-qr-scan-title">Scan customer loyalty QR</h2>
+        <p class="snb-muted owner-qr-scan-lead">
+          Use the camera to scan the QR on the customer&apos;s loyalty card to record today&apos;s visit.
+        </p>
+        <div id="memberScannerReader" class="owner-qr-scanner-view"></div>
+        <p id="memberScanStatus" class="snb-muted owner-qr-load-status" aria-live="polite"></p>
+        <button type="button" id="memberScanBtn" class="snb-wallet-btn owner-qr-action-primary owner-qr-scan-btn">
+          Start camera
+        </button>
+      </article>
+
       <section class="snb-foot-card owner-qr-actions-panel">
         <a href="/admin-members.html" class="snb-wallet-btn owner-qr-action-primary">Customers back office</a>
         <button type="button" id="ownerQrSignOut" class="snb-wallet-btn owner-qr-action-secondary">
@@ -60,6 +72,7 @@
       </section>
     </main>
 
-    <script src="/owner-qr.js?v=33"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="/owner-qr.js?v=34"></script>
   </body>
 </html>

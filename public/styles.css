@@ -728,6 +728,38 @@ code {
   box-shadow: none;
 }
 
+.owner-qr-scan-card {
+  margin-top: 14px;
+}
+
+.owner-qr-scan-title {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.owner-qr-scan-lead {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.owner-qr-scanner-view {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.owner-qr-scan-btn {
+  margin-top: 12px;
+}
+
 /* Customers back office blue/black restyle */
 .admin-members-page {
   background:
